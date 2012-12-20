@@ -1,0 +1,85 @@
+#!/usr/bin/env perl
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use App::Netdisco;
+
+use Dancer ':script';
+use Dancer::Plugin::DBIC 'schema';
+
+use Try::Tiny;
+
+=head1 netdisco-db-deploy
+
+This script upgrades or initialises a Netdisco database schema.
+
+Pre-existing requirements are that there be a database table created and a
+user with rights to create tables in that database. Both the table and user
+name must match those configured in your environment YAML file (default
+C<environments/development.yml>).
+
+Simply run this script, which connects to the database and runs without user
+interaction. If there's no Nedisco schema, it is deployed. If there's an
+unversioned schema then versioning is added, and updates applied.  Otherwise
+only necessary updates are applied to an already versioned schema.
+
+=head2 Versions
+
+=over 4
+
+=item *
+
+Version 1 is a completely empty database schema with no tables
+
+=item *
+
+Version 2 is the "classic" Netdisco database schema as of Netdisco 1.1
+
+=item *
+
+Version 3 adds patches for Netdisco 1.2
+
+=item *
+
+Version 4 (not yet created) B<will diverge from "classic" Netdisco 1.x>
+
+=back
+
+=cut
+
+my $schema = schema('netdisco');
+
+# installs the dbix_class_schema_versions table with version "1"
+# which corresponds to an empty schema
+if (not $schema->get_db_version) {
+    $schema->txn_do(sub { $schema->install(1) });
+    $schema->storage->disconnect;
+}
+
+# test for existing schema at public release version, set v=2 if so
+try {
+    $schema->storage->dbh_do(sub {
+      my ($storage, $dbh) = @_;
+      $dbh->selectrow_arrayref("SELECT * FROM device WHERE 0 = 1");
+    });
+
+    $schema->_set_db_version({version => 2})
+      if $schema->get_db_version == 1;
+    $schema->storage->disconnect;
+};
+
+# upgrade from whatever dbix_class_schema_versions says, to $VERSION
+my $db_version = $schema->get_db_version;
+my $target_version = $schema->schema_version;
+
+# one step at a time, in case user has applied local changes already
+for (my $i = $db_version; $i < $target_version; $i++) {
+    try {
+        $schema->upgrade_single_step($i, $i + 1);
+    }
+    catch {
+        $schema->_set_db_version({version => $i + 1});
+    }
+}
+
+exit 0;

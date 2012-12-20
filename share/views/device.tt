@@ -1,0 +1,59 @@
+<i class="sidebar_toggle icon-wrench icon-large" id="sidebar_toggle_img_out"
+  rel="tooltip" data-placement="left" data-offset="5" data-title="Show Sidebar"></i>
+<i class="icon-question-sign icon-large" id="netmap_help_img" rel="popover"
+  data-title="Neighbor Map Controls"
+  data-html="true"
+  data-content="
+    <ul>
+      <li>Click and drag to pan</li>
+      <li>Mouse-wheel scroll to zoom</li>
+      <li>Hover to hightlight neighbors</li>
+      <li>Click to view device's map</li>
+    </ul>"
+  data-placement='left' data-trigger='click'></i>
+<div class="container-fluid">
+  <div class="sidebar sidebar_pinned">
+    <div class="well">
+      <i class="sidebar_toggle icon-signout" id="sidebar_toggle_img_in"
+        rel="tooltip" data-placement="left" data-offset="5" data-title="Hide Sidebar"></i>
+      <i class="sidebar_pin icon-pushpin sidebar_pin_clicked"
+        rel="tooltip" data-placement="left" data-offset="5" data-title="Unpin Sidebar"></i>
+      <div class="tab-content">
+        [% FOREACH tab IN vars.tabs %]
+        <div id="[% tab.id %]_search" class="tab-pane [% 'active' IF params.tab == tab.id %]">
+          <form id="[% tab.id %]_form" class="nd_sidesearchform form-stacked"
+              method="get" action="[% uri_for('/device') %]">
+            <input name="tab" value="[% tab.id %]" type="hidden"/>
+            [% TRY %]
+            [% INCLUDE "sidebar/device/${tab.id}.tt" %]
+            <script type="text/javascript">has_sidebar["[% tab.id %]"] = 1;</script>
+            [% CATCH %]
+            <!-- no "[% tab.id %]" search options -->
+            <input name="q" value="[% params.q %]" type="hidden"/>
+            <input name="f" value="[% params.f %]" type="hidden"/>
+            <script type="text/javascript">has_sidebar["[% tab.id %]"] = 0;</script>
+            [% END %]
+          </form>
+        </div> <!-- /tab-pane -->
+        [% END %]
+      </div> <!-- /tab-content -->
+    </div>
+  </div>
+
+  <div class="content">
+    <ul id="search_results" class="nav nav-tabs">
+      [% FOREACH tab IN vars.tabs %]
+      <li[% ' class="active"' IF params.tab == tab.id %]><a id="[% tab.id %]_link" href="#[% tab.id %]_pane">[% tab.label %]</a></li>
+      [% END %]
+      <span id="nd_device_name">[% d.dns || d.name %]</span>
+    </ul>
+    <div class="tab-content">
+      [% FOREACH tab IN vars.tabs %]
+      <div class="tab-pane[% ' active' IF params.tab == tab.id %]" id="[% tab.id %]_pane"></div>
+      [% END %]
+  </div>
+</div>
+
+<script type="text/javascript">
+[%+ INCLUDE 'js/device.js' -%]
+</script>

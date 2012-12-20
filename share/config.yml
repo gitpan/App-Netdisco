@@ -1,0 +1,61 @@
+# This is the main configuration file for Netdisco web and daemon apps
+# all the settings in this file will be loaded at Dancer's startup.
+
+# Web app env-related settings should go to environments/$env.yml
+
+# Your application's name
+appname: "Netdisco"
+
+# The default web layout to use for your application (located in
+# views/layouts/main.tt)
+layout: "main"
+
+# when the charset is set to UTF-8 Dancer will handle for you
+# all the magic of encoding and decoding. You should not care
+# about unicode within your app when this setting is set (recommended).
+charset: "UTF-8"
+
+# web sessions stored in memory
+session: Simple
+
+# web output template settings
+template: "template_toolkit"
+engines:
+  template_toolkit:
+    encoding:  'utf8'
+    start_tag: '[%'
+    end_tag:   '%]'
+    PRE_CHOMP: 1
+
+# netdisco stuff (can be overidden in the environment .yml)
+
+discover_no: []
+discover_only: []
+
+snmpver: 2
+snmpretries: 2
+snmptimeout: 1000000
+
+mibhome: /usr/share/netdisco/mibs
+mibdirs:
+  - cisco
+  - rfc
+  - net-snmp
+
+community: ['public']
+community_rw: ['private']
+
+# rights control for Interactive jobs
+vlanctl: 1
+allow_uplinks: 0
+portctl_nophones: 1
+portctl_vlans: 1
+
+# sleep time between polls of the database job queue
+daemon_sleep_time: 5
+
+# how many daemon processes
+# NB one worker will always be a Queue Manager
+daemon_pollers: 0
+daemon_interactives: 2
+

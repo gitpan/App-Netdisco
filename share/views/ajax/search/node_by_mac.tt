@@ -1,0 +1,111 @@
+<table class="table-bordered table-condensed table-striped">
+  <thead>
+    <tr>
+      <th>MAC</th>
+      [% IF params.vendor %]
+      <th>Vendor</th>
+      [% END %]
+      <th>Match</th>
+      <th>Device or Node</th>
+      [% IF params.stamps %]
+      <th>First Seen</th>
+      <th>Last Seen</th>
+      [% END %]
+    </tr>
+  </thead>
+  </tbody>
+    [% SET first_row = 1 %]
+    [% WHILE (row = ips.next) %]
+    <tr>
+      <td>
+        [% IF first_row %]
+        <a class="nd_linkcell"
+          href="[% vars.search_node %]&q=[% row.mac | uri %]">[% row.mac %]</a>
+        [% ELSE %]
+        &nbsp;
+        [% END %]
+      </a>
+      [% IF params.vendor %]
+      <td>
+        [% IF first_row %]
+        [% row.oui.company %]
+        [% ELSE %]
+        &nbsp;
+        [% END %]
+      </td>
+      [% END %]
+      <td>MAC &rarr; IP</td>
+      <td><a href="[% vars.search_node %]&q=[% row.ip | uri %]">[% row.ip %]</a>
+        [% ' (' _ row.dns.remove(settings.domain_suffix) _ ')' IF row.dns %]
+        [% ' <span class="label label-warning">A</span>' IF NOT row.active %]
+      </td>
+      [% IF params.stamps %]
+      <td>[% row.time_first_stamp %]</td>
+      <td>[% row.time_last_stamp %]</td>
+      [% END %]
+    </tr>
+    [% SET first_row = 0 %]
+    [% END %]
+    [% WHILE (node = sightings.next) %]
+    <tr>
+      <td>
+        [% IF first_row %]
+        <a class="nd_linkcell"
+          href="[% vars.search_node %]&q=[% node.mac | uri %]">[% node.mac %]</a>
+        [% ELSE %]
+        &nbsp;
+        [% END %]
+      </td>
+      [% IF params.vendor %]
+      <td>
+        [% IF first_row %]
+        [% node.oui.company %]
+        [% ELSE %]
+        &nbsp;
+        [% END %]
+      </td>
+      [% END %]
+      <td>Switch Port</td>
+      <td><a href="[% vars.device_ports %]&q=[% node.switch | url %]&f=[% node.port | url %]&c_nodes=on&c_neighbor=on">[% node.switch %] [ [% node.port %] ]</a>
+        [% ' (' _ node.device.dns.remove(settings.domain_suffix) _ ')' IF node.device.dns %]
+        [% ' <span class="label label-warning">A</span>' IF NOT node.active %]
+      </td>
+      [% IF params.stamps %]
+      <td>[% node.time_first_stamp %]</td>
+      <td>[% node.time_last_stamp %]</td>
+      [% END %]
+    </tr>
+    [% SET first_row = 0 %]
+    [% END %]
+    [% WHILE (port = ports.next) %]
+    <tr>
+      <td>
+        [% IF first_row %]
+        <a class="nd_linkcell"
+          href="[% vars.search_node %]&q=[% port.mac | uri %]">[% port.mac %]</a>
+        [% ELSE %]
+        &nbsp;
+        [% END %]
+      </td>
+      [% IF params.vendor %]
+      <td>
+        [% IF first_row %]
+        [% port.oui.company %]
+        [% ELSE %]
+        &nbsp;
+        [% END %]
+      </td>
+      [% END %]
+      <td>Switch Port</td>
+      <td><a href="[% vars.device_ports %]&q=[% port.ip | url %]&f=[% port.port | url %]&c_nodes=on&c_neighbor=on">[% port.ip %] [ [% port.port %] ]</a>
+        [% ' (' _ port.device.dns.remove(settings.domain_suffix) _ ')' IF port.device.dns %]
+      </td>
+      [% IF params.stamps %]
+      <td>[% port.creation %]</td>
+      <td>[% port.creation %]</td>
+      [% END %]
+    </tr>
+    [% SET first_row = 0 %]
+    [% END %]
+  </tbody>
+</table>

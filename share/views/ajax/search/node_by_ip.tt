@@ -1,0 +1,70 @@
+<table class="table-bordered table-condensed table-striped">
+  <thead>
+    <tr>
+      <th>MAC</th>
+      [% IF params.vendor %]
+      <th>Vendor</th>
+      [% END %]
+      <th>Match</th>
+      <th>Device or Node</th>
+      [% IF params.stamps %]
+      <th>First Seen</th>
+      <th>Last Seen</th>
+      [% END %]
+    </tr>
+  </thead>
+  </tbody>
+    [% WHILE (row = macs.next) %]
+    <tr>
+      <td><a class="nd_linkcell"
+        href="[% vars.search_node %]&q=[% row.mac | uri %]">[% row.mac %]</a></td>
+      [% IF params.vendor %]
+      <td>[% row.oui.company %]</td>
+      [% END %]
+      <td>IP &rarr; MAC</td>
+      <td><a href="[% vars.search_node %]&q=[% row.ip | uri %]">[% row.ip %]</a>
+        [% ' (' _ row.dns.remove(settings.domain_suffix) _ ')' IF row.dns %]
+        [% ' <span class="label label-warning">A</span>' IF NOT row.active %]
+      </td>
+      [% IF params.stamps %]
+      <td>[% row.time_first_stamp %]</td>
+      <td>[% row.time_last_stamp %]</td>
+      [% END %]
+    </tr>
+    [% FOREACH node IN row.node_sightings(archive_filter) %]
+    <tr>
+      <td>&nbsp;</td>
+      [% IF params.vendor %]
+      <td>&nbsp;</td>
+      [% END %]
+      <td>Switch Port</td>
+      <td><a href="[% vars.device_ports %]&q=[% node.switch | url %]&f=[% node.port | url %]&c_nodes=on&c_neighbor=on">[% node.switch %] [ [% node.port %] ]</a>
+        [% ' (' _ node.device.dns.remove(settings.domain_suffix) _ ')' IF node.device.dns %]
+        [% ' <span class="label label-warning">A</span>' IF NOT node.active %]
+      </td>
+      [% IF params.stamps %]
+      <td>[% node.time_first_stamp %]</td>
+      <td>[% node.time_last_stamp %]</td>
+      [% END %]
+    </tr>
+    [% END %]
+    [% FOREACH nodeip IN row.ip_aliases(archive_filter) %]
+    <tr>
+      <td>&nbsp;</td>
+      [% IF params.vendor %]
+      <td>&nbsp;</td>
+      [% END %]
+      <td>MAC &rarr; IP</td>
+      <td><a href="[% vars.search_node %]&q=[% nodeip.ip | uri %]">[% nodeip.ip %]</a>
+        [% ' (' _ nodeip.dns.remove(settings.domain_suffix) _ ')' IF nodeip.dns %]
+        [% ' <span class="label label-warning">A</span>' IF NOT nodeip.active %]
+      </td>
+      [% IF params.stamps %]
+      <td>[% nodeip.time_first_stamp %]</td>
+      <td>[% nodeip.time_last_stamp %]</td>
+      [% END %]
+    </tr>
+    [% END %]
+    [% END %]
+  </tbody>
+</table>

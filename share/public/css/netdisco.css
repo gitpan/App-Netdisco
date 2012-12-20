@@ -1,0 +1,417 @@
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* for the fixed navbar make sure content stops short of page top*/
+
+body {
+  padding-top: 50px;
+}
+
+/* magnifying glass icon for search box */
+.navbar_icon {
+  vertical-align: sub;
+  cursor: pointer;
+}
+
+/* for the "logged in as..." text */
+.nd_navbartext {
+  color: #666;
+  padding-top: 11px;
+}
+
+/* on both main content and sidebar, default is hidden */
+.tab-content {
+  overflow: visible;
+}
+
+/* ajax results should fill all available */
+.tab-content table {
+  width: 100%;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* various styles to adjust the hero box used for homepage + login */
+
+.nd_herorow {
+  margin-top: 50px;
+}
+
+.hero-unit {
+  padding: 30px 60px 40px 90px;
+}
+
+.nd_loginform {
+  margin-top: 15px;
+  margin-bottom: 0px;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* styles for Reports */
+
+/* from Bootstrap doc style sheet */
+.nd_show-grid [class*="span"] {
+  background-color: cornsilk;
+  text-align: center;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  min-height: 30px;
+  line-height: 30px;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* styles for Inventory */
+
+#nd_dev_age_form {
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+.nd_inv_tbl_head {
+  text-align: center;
+  color: lightSlateGray;
+  margin-top: 6px;
+  margin-bottom: 3px;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* results table links */
+
+.nd_stealthlink {
+  text-decoration: none !important;
+  color: #404040;
+}
+
+/* make the whole cell become a hyperlink in results table */
+.nd_linkcell {
+  display: block;
+  padding: 0px;
+  height: 100%;
+}
+
+/* special placing for edit icon in details tab */
+.nd_device_details_edit {
+  float: right !important;
+  font-size: 14px;
+}
+
+/* port admin up/down control */
+.nd_edit_icon, .nd_hand_icon {
+  cursor: pointer;
+  float: left;
+  display: none;
+}
+
+.nd_power_icon {
+  cursor: pointer;
+}
+
+.icon-off {
+  vertical-align: middle;
+  color: darkRed;
+}
+
+.nd_power_on {
+  color: darkGreen;
+}
+
+/* placement of port link when port admin hint is enabled */
+.nd_editable_cell > .nd_this_port_only {
+  margin-left: 18px;
+}
+.nd_editable_cell > .nd_editable_cell_content {
+  margin-left: 18px;
+}
+
+/* style of editable content in table */
+[contenteditable]:focus {
+  background: #FFFFD3 !important;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* many styles for the collapsing lists */
+
+/* mouse-over should be pointer to show JS collapser is clickable */
+.nd_collapser {
+  cursor: pointer;
+  color: #0088CC;
+}
+
+/* collapser label should not have any decoration even though it's clickable */
+.clearfix > a {
+  text-decoration: none !important;
+}
+
+/* collapser label should not have any decoration even though it's clickable */
+.nd_collapse_vlans {
+  text-decoration: none !important;
+  cursor: pointer;
+  color: #0088CC;
+}
+
+/* class to control default state of collapsible lists on page load */
+.nd_collapse_pre_hidden {
+  display: none;
+}
+
+/* for the tagged vlans total when hiding the full list */
+.vlan_total {
+  float: right;
+}
+
+/* little up/down chevron to the right of some collapser link */
+.arrow-up-down {
+  float: right;
+  margin-top: 1px;
+  margin-right: 1px;
+  color: #555;
+}
+
+/* draw little up arrow to the left of a label for collapsed list */
+.cell-arrow-up-down {
+  float: left;
+  margin-right: 6px;
+  color: #555;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* for table and to position cell content */
+
+td {
+  vertical-align: baseline;
+}
+
+.center_cell {
+  text-align: center;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* tabs */
+
+#search_results {
+  margin-bottom: 10px;
+}
+
+#nd_device_name {
+  float: right;
+  margin-bottom: 0px;
+  margin-top: 9px;
+  font-weight: bold;
+  color: #6D5720;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* style customization for many items which appear in the sidebar */
+
+/* fixups for prepended checkbox in sidebar */
+.nd_searchcheckbox {
+  width: 123px;
+  padding-left: 8px;
+  cursor: pointer;
+}
+
+/* for some reason bootstrap 2.1.0 displays add-on as block - no check supprt? */
+.nd_checkboxlabel {
+  display: inline;
+}
+
+/* fixups for placing the Archived "A" inside the prepended checkbox */
+.nd_legendlabel {
+  float: right;
+  line-height: 1.2;
+}
+
+.nd_side_input {
+  margin-left: -3px;
+  width: 152px;
+}
+
+.nd_side_select {
+  margin-left: -3px;
+  width: 165px;
+}
+
+.sidebar .input-prepend {
+  margin-left: -2px;
+  margin-bottom: 0px;
+}
+
+/* nudge the port name/vlan filter over a little */
+#nd_port_query {
+  margin-left: 5px !important;
+  width: 152px;
+}
+
+/* somewhere between span1 and span2 is desirable */
+#nd_days_select {
+  margin-top: 4px;
+  width: 56px;
+}
+
+/* set the day/mon/year drop-down width */
+#nd_age_select {
+  margin-top: 4px;
+  width: 95px;
+}
+
+/* sidebar submit button width and spacing from Node Props */
+.sidebar button {
+  margin-top: 9px;
+  margin-left: -3px;
+  width: 165px;
+}
+.sidebar #ports_submit {
+  margin-top: 9px;
+  width: 165px;
+}
+
+/* little icon inside of search input fields */
+.field_clear_icon, .field_copy_icon {
+  position: absolute;
+  margin-left: 132px;
+  z-index: 1;
+  padding: 7px;
+  cursor: pointer;
+  color: #999;
+}
+
+/* change highlighting for form fields which are being used in a search */
+form .clearfix.success select {
+  background-color: #A9DBA9;
+}
+form .clearfix.success input {
+  background-color: #A9DBA9;
+}
+
+/* when we use font-awesome icons, override the size */
+#nd_legend i {
+  width: 9px;
+}
+.table-bordered i {
+  width: 9px;
+}
+
+/* bring sidebar items closer together */
+.inputs-list label {
+  margin-bottom: 1px;
+}
+
+/* nudge content closer to the header labels in the sidebar */
+.inputs-list li:first-child {
+  padding-top: 3px !important;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* sidebar collapser */
+
+.nd_sidebar_title {
+  margin-left: 10px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.sidebar_pinned {
+  position: fixed !important;
+}
+
+.sidebar_pin_clicked {
+  color: rgba(255,0,0,0.8) !important;
+}
+
+/* for placing the sidebar pin icons */
+.sidebar_pin {
+  float: left;
+  margin-top: 6px;
+  margin-left: -16px;
+  font-size: 15px;
+  color: #555;
+  cursor: pointer;
+}
+
+/* for placing the sidebar toggle icons */
+#sidebar_toggle_img_in {
+  float: left;
+  margin-top: -9px;
+  margin-left: -16px;
+  font-size: 15px;
+  color: #555;
+  cursor: pointer;
+}
+
+/* for placing the sidebar toggle icons */
+#sidebar_toggle_img_out {
+  position: fixed;
+  top: 60px;
+  right: 7px;
+  z-index: 1;
+  color: #555;
+  cursor: pointer;
+  display: none;
+}
+
+/* question mark image with popover for netmap instructions */
+#netmap_help_img {
+  position: fixed;
+  top: 160px;
+  right: 7px;
+  z-index: 1;
+  color: #555;
+  font-size: 20px;
+  cursor: pointer;
+  display: none;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* sidebar placement and sizing */
+
+/* make the sidebar fixed on the screen */
+.container-fluid > .sidebar {
+  position: absolute;
+  right: 20px;
+  width: 200px;
+  left: auto;
+}
+
+/* smaller padding below form button in sidebar well */
+.container-fluid > .sidebar > .well {
+  padding-bottom: 15px;
+}
+
+/* make the content start more to the left now the sidebar is narrower */
+.container-fluid > .content {
+  margin-right: 215px;
+  margin-left: 0px;
+}
+
+/* nudge content in the sidebar closer to the left */
+.nd_sidesearchform {
+  padding-left: 0px;
+  margin-top: -9px;
+  margin-bottom: 0px;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* D3 SVG */
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.node {
+  font: 10px sans-serif;
+}
+
+.link {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 1.5px;
+}
+
+.neighbor {
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 2px;
+  display: none;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

@@ -1,0 +1,55 @@
+<div class="container">
+  <div class="row nd_herorow">
+    <div class="span8 offset2">
+      [% IF params.failed %]
+      <div class="alert alert-error fade in">
+        <a class="close" data-dismiss="alert">×</a>
+        Incorrect username or password, please try again.
+      </div>
+      [% END %]
+      [% IF params.logout %]
+      <div class="alert fade in">
+        <a class="close" data-dismiss="alert">×</a>
+        You are now logged out.
+      </div>
+      [% END %]
+      [% IF params.nosuchdevice %]
+      <div class="alert fade in">
+        <a class="close" data-dismiss="alert">×</a>
+        Sorry, no such device is known.
+      </div>
+      [% END %]
+      [% IF vars.notfound %]
+      <div class="alert fade in">
+        <a class="close" data-dismiss="alert">×</a>
+        Sorry, page not found.
+          <a href="http://sourceforge.net/tracker/?group_id=80033&atid=558508" target="_blank">Report a Bug?</a>
+      </div>
+      [% END %]
+      [% IF NOT session.user %]
+      <div class="alert alert-success fade in">
+        <a class="close" data-dismiss="alert">×</a>
+        Log in to the Demo with username &quot;demo&quot; and password &quot;demo&quot;.
+      </div>
+      [% END %]
+      <div class="hero-unit">
+        <h2>Welcome to Netdisco</h2>
+        <small>Netdisco is an Open Source web-based network management tool.</small>
+        [% IF NOT session.user %]
+        <form class="nd_loginform" method="post" action="[% uri_for('/login') %]">
+          <div class="form-horizontal">
+            <input placeholder="Username" class="span2" name="username" type="text"/>
+            <input placeholder="Password" class="span2" name="password" type="password"/>
+            <button type="submit" class="btn btn-info">Log In</button>
+          </div>
+          [% IF vars.requested_path %]
+          <input type="hidden" name="path" value="[% vars.requested_path %]"/>
+          [% END %]
+        </form>
+        [% ELSE %]
+        <script type="text/javascript"> $('#nq').focus(); // set focus to navbar search </script>
+        [% END %]
+      </div>
+    </div>
+  </div>
+</div> <!-- /container -->

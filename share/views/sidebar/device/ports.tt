@@ -1,0 +1,120 @@
+
+            <input name="q" value="[% params.q %]" type="hidden"/>
+            <div class="clearfix">
+              <a class="field_clear_icon" href="#"
+                rel="tooltip" data-placement="top" data-offset="3" data-title="Show all Ports">
+                <img src="[% uri_base %]/images/tango_sweep.png"/></a>
+              <input id="nd_port_query" placeholder="Port, Name or VLAN"
+                name="f" value="[% params.f %]" type="text"
+                rel="tooltip" data-placement="left" data-offset="5" data-title="Filter by Port, Name or VLAN"/>
+            </div>
+            <div class="clearfix">
+              <span data-toggle="collapse" data-target="#nd_legend">
+                <label class="nd_collapser">Legend
+                <i class="arrow-up-down icon-chevron-up icon-large"></i>
+                </label></span>
+              <div id="nd_legend" class="collapse">
+                <ul class="inputs-list unstyled">
+                  <li>
+                    <span class="label">S</span>&nbsp; Admin Disabled
+                  </li>
+                  <li>
+                    <span class="label label-warning">D</span>&nbsp; Link Down
+                  </li>
+                  <li>
+                    <span class="label label-success">F</span>&nbsp; Port Free (Down)
+                  </li>
+                  <li>
+                    <span class="label label-info">B</span>&nbsp; Blocking
+                  </li>
+                  <li>
+                    <span class="label">P</span>&nbsp; IP Phone
+                  </li>
+                  <li>
+                    <span class="label label-important">N</span>&nbsp; Neighbor Inacessible
+                  </li>
+                  <li>
+                    <span class="label label-warning">A</span>&nbsp; Archived Data
+                  </li>
+                  <li>
+                    <span class="label"><i class="icon-refresh"></i></span>&nbsp; Click "Update View"
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="clearfix">
+              <span data-toggle="collapse" data-target="#nd_columns">
+                <label class="nd_collapser">Display Columns
+                <i class="arrow-up-down icon-chevron-down icon-large"></i>
+                </label></span>
+              <div id="nd_columns" class="collapse in">
+                <ul class="inputs-list unstyled">
+                  [% FOREACH item IN vars.port_columns %]
+                  [% NEXT IF item.name == 'c_admin' AND NOT vars.user.port_control %]
+                  <li>
+                    <label class="checkbox">
+                      <input type="checkbox" id="[% item.name %]"
+                        name="[% item.name %]"[% ' checked="checked"' IF params.${item.name} %] />
+                      [% IF item.name == 'c_admin' %]
+                        <span class="label label-inverse">[% item.label %]</span>
+                      [% ELSE %]
+                        [% item.label %]
+                      [% END %]
+                    </label>
+                  </li>
+                  [% END %]
+                </ul>
+              </div>
+            </div>
+            <div class="clearfix">
+              <span data-toggle="collapse" data-target="#nd_portprops">
+                <label class="nd_collapser">Port Properties
+                <i class="arrow-up-down icon-chevron-up icon-large"></i>
+                </label></span>
+              <div id="nd_portprops" class="collapse">
+                <ul class="inputs-list unstyled">
+                  <li>
+                    <label class="checkbox">
+                      <input type="checkbox" id="free"
+                        name="free"[% ' checked="checked"' IF params.free %]/>
+                      Only Show Free Ports
+                    </label>
+                  </li>
+                  <li>
+                    <span rel="tooltip" data-placement="left"
+                      data-offset="5" data-title="Free if Down for this period of time">
+                    <select id="nd_days_select" name="age_num">
+                      [% FOREACH count IN [1..32] %]
+                      <option[% ' selected="selected"' IF params.age_num == count %]>[% count %]</option>
+                      [% END %]
+                    </select>
+                    <select id="nd_age_select" name="age_unit">
+                      [% FOREACH unit IN [ 'days', 'weeks', 'months', 'years' ] %]
+                      <option[% ' selected="selected"' IF params.age_unit == unit %]>[% unit %]</option>
+                      [% END %]
+                    </select>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="clearfix">
+              <span data-toggle="collapse" data-target="#nd_nodeprops">
+                <label class="nd_collapser">Node Properties
+                <i class="arrow-up-down icon-chevron-up icon-large"></i>
+                </label></span>
+              <div id="nd_nodeprops" class="collapse">
+                <ul class="inputs-list unstyled">
+                  [% FOREACH item IN vars.connected_properties %]
+                  <li>
+                    <label class="checkbox">
+                      <input type="checkbox" id="[% item.name %]"
+                        name="[% item.name %]"[% ' checked="checked"' IF params.${item.name} %] />
+                      [% item.label %]
+                    </label>
+                  </li>
+                  [% END %]
+                </ul>
+              </div>
+            </div>
+            <button id="[% tab.id %]_submit" type="submit" class="btn btn-info">Update View</button>

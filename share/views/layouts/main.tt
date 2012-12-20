@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=[% settings.charset %]" />
+  <link rel="shortcut icon" href="#" />
+  <title>Netdisco</title>
+
+  <!-- HTML5 shim, for IE6-8 support of HTML elements -->
+  <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <script type="text/javascript" src="[% uri_base %]/javascripts/jquery-latest.min.js"></script>
+  <script type="text/javascript" src="[% uri_base %]/javascripts/jquery-history.js"></script>
+  <script type="text/javascript" src="[% uri_base %]/javascripts/jquery-deserialize.js"></script>
+  <script type="text/javascript" src="[% uri_base %]/javascripts/bootstrap.min.js"></script>
+  <script type="text/javascript" src="[% uri_base %]/javascripts/d3.min.js"></script>
+
+  <script type="text/javascript">
+    var uri_base = '[% uri_base %]';
+  </script>
+
+  <script type="text/javascript" src="[% uri_base %]/javascripts/netdisco.js"></script>
+
+  [% IF vars.user.port_control %]
+  <script type="text/javascript" src="[% uri_base %]/javascripts/toastr.js"></script>
+  <script type="text/javascript" src="[% uri_base %]/javascripts/netdisco_portcontrol.js"></script>
+
+  <link rel="stylesheet" href="[% uri_base %]/css/toastr.css"/>
+  [% END %]
+
+  <link rel="stylesheet" href="[% uri_base %]/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="[% uri_base %]/css/font-awesome.css"/>
+  <link rel="stylesheet" href="[% uri_base %]/css/netdisco.css"/>
+  <link rel="stylesheet" href="[% uri_base %]/css/nd_print.css" media="print"/>
+</head>
+
+<body>
+[%
+  more_dd = { "Reports" = "/reports" }
+  user_dd = [
+    { "title" = "Settings", "link" = "/settings" },
+    { "title" = "Help", "link" = "/help" },
+    { "title" = "Log Out", "link" = "/logout" }
+  ]
+%]
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="[% uri_for('/') %]">Netdisco</a>
+      [% IF session.user %]
+      <ul class="nav">
+        <li[% ' class="active"' IF vars.nav == 'inventory' %]>
+          <a href="[% uri_for('/inventory') %]">Inventory</a>
+        </li>
+        [% IF more_dd.size %]
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            More <b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            [% FOREACH title IN more_dd.keys.sort %]
+            <li><a href="[% uri_for(more_dd.$title) %]">[% title %]</a></li>
+            [% END %]
+          </ul>
+        </li> <!-- /dropdown -->
+        [% END %]
+      </ul>
+      <form class="navbar-search pull-left" method="get" action="[% uri_for('/search') %]">
+        <input placeholder="Find Anything" class="search-query span3" id="nq" name="q" type="text"/>
+        <span style="font-size: 24px;">
+        <i id="navsearchgo" class="icon-search navbar_icon"></i>
+        </span>
+      </form>
+      <ul class="nav pull-right">
+        <li class="nd_navbartext">Logged in as &nbsp;</li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          [% IF vars.user.port_control %]
+            <i class="icon-user-md"></i>
+          [% ELSE %]
+            <i class="icon-user"></i>
+          [% END %]
+            [% session.user %] <b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            [% FOREACH item IN user_dd %]
+            <li><a href="[% uri_for(item.link) %]">[% item.title %]</a></li>
+            [% END %]
+          </ul>
+        </li> <!-- /dropdown -->
+      </ul>
+      [% END %]
+    </div>
+  </div>
+</div>
+
+[% content %]
+
+<script type="text/javascript">
+[%+ INCLUDE 'js/common.js' -%]
+</script>
+
+</body>
+</html>
