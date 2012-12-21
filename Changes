@@ -1,0 +1,192 @@
+2.00_012 - 2012-12-21
+
+  [ENHANCEMENTS]
+
+  * Move Changes file to be in CPAN Dist
+  * Update install docs to use URL for package until we are CPAN-indexed
+
+2.00_011 - 2012-12-20
+
+  [ENHANCEMENTS]
+
+  * store daemon db in the netdisco home area
+  * confirm db schema deployed
+
+  [BUG FIXES]
+
+  * fix mistake in docs for schema file name
+  * bug with using last inside try{}
+  * bug with txn_do in Manager worker
+
+2.00_010 - 2012-12-20
+
+  [NEW FEATURES]
+
+  * new netdisco-deploy script to do all deployment tasks at once
+
+  [ENHANCEMENTS]
+
+  * update README with full deployment instructions
+  * add SNMP settings for daemon to environment
+
+  [BUG FIXES]
+
+  * upgrade db incrementally
+  * rename schema files to be App-*
+  * fix for older Perl which warns about a bug in File::Slurp
+  * fix bug with empty DANCER_APPDIR
+  * fix version strings for platform warning
+  * add missing JSON dependency
+  * fix sharedir to use dist dir not module dir
+  * remove redundant lines in Makefile.PL
+
+2.00_009 - 2012-12-17
+
+  [NEW FEATURES]
+
+  * Relocate into App::Netdisco namespace
+  * Make a proper CPAN-ready dist using Module::Install
+  * Update OUI data when the DB schema is deployed/upgraded
+
+2.00_008 - 2012-12-16
+
+  [NEW FEATURES]
+
+  * Refactor to make less webby and more suitable to be a complete Netdisco app
+  * Network Map now shows all device neighbors and allows click-through nav
+  * Add new netdisco-daemon to handle port_control actions
+  * Add PoE control to port_control (+ up/down,vlan,name,location,contact)
+
+  [ENHANCEMENTS]
+
+  * eradicate checks for dns column in node_ip table - now assumed to be there
+  * remove .pl from script names
+  * no longer deploy FK constraints with DB schema as they upset legacy netdisco.pm
+
+  [BUG FIXES]
+
+  * port cotrol user log check now looks for all actions
+  * node search switchport link shows connected nodes again
+  * show device IP in search results when DNS is not available
+
+2.00_007 - 2012-11-25
+
+  [NEW FEATURES]
+
+  * Add Port Control (admin table) features to web
+  * Implement DBIx::Class::Schema::Versioned support - DB schema is now versioned
+  * Navbar query for device with single hit redirects to Device details page
+  * Show device name on device details views (closes #30)
+  * Migrated to Font Awesome for a wider range of icon fonts
+  * Simple network map showing *some* links between devices
+  * Individual column selections for connected nodes and devices
+
+  [ENHANCEMENTS]
+
+  * Move DBIC virtual tables into Virtual:: namespace (closes #19)
+  * Maintain node search options when changing navbar query (closes #27)
+  * Device port connected devices now off, Display Cols shown by default
+  * Remove various dummy <a> tags that were encouraged by Bootstrap
+  * Node search link enables connected devices column (closes #31)
+  * Better layout of sidebar pinning
+
+  [BUG FIXES]
+
+  * Fix netgear port ordering (closes #26)
+  * Fix Foundry 10GE port ordering
+
+2.00_006 2012-08-28
+
+  [NEW FEATURES]
+
+  * Icon to copy Navbar search text to Device Search Options field (closes #11)
+  * Typeahead on the main navbar search (for devices only)
+  * Support for have_nodeip_dns_col setting (closes #14)
+  * Set focus to navbar search on initial login or when changing to home (closes #24)
+  * Port filter supports basic */?/%/_ wildcards (closes #25)
+
+  [ENHANCEMENTS]
+
+  * Native copy of the Netdisco sort_port routine (#17)
+  * Refactor begin hooks (closes #16)
+  * Re-engineer link generation to ensure sane defaults and remembered options.
+    This came as a side-effect of removing JS-only links (closes #21)
+  * Replace jquery-collapser with Bootstrap's collapser
+  * Upgraded to Twitter Bootstrap 2.1.0 - customized for 13px font 18px line
+  * Factor out inventory queries to the Device ResultSet (closes #20)
+  * Clicking on a port to restrict search now uses AJAX instead of page get
+
+  [BUG FIXES]
+
+  * Fix sidebar hiding not making main content reflow to full window width (#15)
+
+2.00_005 2012-03-09
+
+  [NEW FEATURES]
+
+  * Inventory page
+  * Migrate to Twtitter Bootstrap v2.x (thanks Eric Miller!)
+
+  [ENHANCEMENTS]
+
+  * Device Ports table port name is clickable to limit to that port only
+  * Tidy up display of Device Port Neighbors
+  * Refactor all SQL/DBIC to be smarter and more efficient
+
+  [BUG FIXES]
+
+  * Fix Net::MAC explosion (#8)
+  * Fix partial IP Addr explosion (#7)
+  * Set distinct on device search (#12)
+  * Fix strikethrough on tab change (#9)
+
+2.00_004 2012-02-19
+
+  [NEW FEATURES]
+
+  * Sidebar can be pinned in place to keep it visible when scrolling.
+
+2.00_003  2011-02-03
+
+  [NEW FEATURES]
+
+  * Browser History is updated with each tab change (HTML5 State). Also
+    the browser url is updated, meaning the Bookmark icon is no longer
+    necessary.
+
+  * Sidebar is now on the right hand side of the window, and is only
+    displayed when there are options for the current tab.
+
+  [ENHANCEMENTS]
+
+  * Refactor Javascript to place most in a static file, speed templating.
+  * Refactor Stylsheets to better organise and comment the settings.
+  * When Device Search sidebar is in use, strikethrough the navbar search.
+
+2.00_002  2011-01-22
+
+  [NEW FEATURES]
+
+  * "Show All Ports" in Device Ports view:
+    A little sweeping brush icon appears when the ports view is filtered.
+    Clicking the icon will clear the filter and resubmit the form.
+
+  * Sidebar can be hidden and unhidden to assist viewing of wide tables.
+
+  * Added Print Stylesheet (hides navbar and sidebar).
+
+  [ENHANCEMENTS]
+
+  * Added this Changes file.
+  * Reorganised TT template file names and locations.
+  * Connected device Age is now rounded to the minute.
+
+  [BUG FIXES]
+
+  * Join type to OUI table is now "LEFT" to allow empty OUI table.
+  * Device Ports Legend show/hide arrow was pointing the wrong way.
+  * Increase TT WHILE_MAX to allow very long lists of ports.
+
+2.00_001  2011-01-18
+
+  * Initial release on an unsuspecting world.
