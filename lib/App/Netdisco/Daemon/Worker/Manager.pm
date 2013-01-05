@@ -4,45 +4,30 @@ use Dancer qw/:moose :syntax :script/;
 use Dancer::Plugin::DBIC 'schema';
 
 use App::Netdisco::Util::DeviceProperties 'is_discoverable';
+use Net::Domain 'hostfqdn';
 use Try::Tiny;
 
 use Role::Tiny;
 use namespace::clean;
 
+my $fqdn = hostfqdn || 'localhost';
+
+my $role_map = {
+  map {$_ => 'Interactive'}
+      qw/location contact portcontrol portname vlan power/
+};
+
 sub worker_begin {
   my $self = shift;
-  my $daemon = schema('daemon');
 
-  # deploy local db if not already done
-  try {
-      $daemon->storage->dbh_do(sub {
-        my ($storage, $dbh) = @_;
-        $dbh->selectrow_arrayref("SELECT * FROM admin WHERE 0 = 1");
-      });
-  }
-  catch {
-      $daemon->txn_do(sub {
-        $daemon->storage->disconnect;
-        $daemon->deploy;
-      });
-  };
+  # requeue jobs locally
+  my $rs = schema('netdisco')->resultset('Admin')
+    ->search({status => "queued-$fqdn"});
 
-  $daemon->storage->disconnect;
-  if ($daemon->get_db_version < $daemon->schema_version) {
-      $daemon->txn_do(sub { $daemon->upgrade });
-  }
+  my @jobs = map {{$_->get_columns}} $rs->all;
+  map { $_->{role} = $role_map->{$_->{action}} } @jobs;
 
-  # on start, any jobs previously grabbed by a daemon on this host
-  # will be reset to "queued", which is the simplest way to restart them.
-
-  my $rs = schema('netdisco')->resultset('Admin')->search({
-    status => "running-$self->{nd_host}"
-  });
-
-  if ($rs->count > 0) {
-      $daemon->resultset('Admin')->delete;
-      $rs->update({status => 'queued', started => undef});
-  }
+  $self->do('add_jobs', \@jobs);
 }
 
 sub worker_body {
@@ -57,72 +42,45 @@ sub worker_body {
           # filter for discover_*
           next unless is_discoverable($job->device);
 
+          # check for available local capacity
+          next unless $self->do('capacity_for', $job->action);
+
           # mark job as running
           next unless $self->lock_job($job);
 
+          my $local_job = { $job->get_columns };
+          $local_job->{role} = $role_map->{$job->action};
+
           # copy job to local queue
-          $self->copy_job($job)
-            or $self->revert_job($job->job);
+          $self->do('add_jobs', [$local_job]);
       }
 
       # reset iterator so ->next() triggers another DB query
       $rs->reset;
-      $self->gd_sleep( setting('daemon_sleep_time') || 5 );
+
+      # TODO also check for stale jobs in Netdisco DB
+
+      sleep( setting('daemon_sleep_time') || 5 );
   }
 }
 
 sub lock_job {
   my ($self, $job) = @_;
-  my $happy = 1;
+  my $happy = 0;
 
-  # lock db table, check job state is still queued, update to running
+  # lock db row and update to show job has been picked
   try {
-      my $status_updated = schema('netdisco')->txn_do(sub {
+      schema('netdisco')->txn_do(sub {
           my $row = schema('netdisco')->resultset('Admin')->find(
-            {job => $job->job},
-            {for => 'update'}
+            {job => $job->job, status => 'queued'}, {for => 'update'}
           );
 
-          $happy = 0 if $row->status ne 'queued';
-          $row->update({
-            status => "running-$self->{nd_host}",
-            started => \'now()'
-          });
+          $row->update({status => "queued-$fqdn"});
       });
-
-      $happy = 0 if not $status_updated;
-  }
-  catch {
-      warn "error locking job: $_\n";
-      $happy = 0;
+      $happy = 1;
   };
 
   return $happy;
-}
-
-sub copy_job {
-  my ($self, $job) = @_;
-
-  try {
-      my %data = $job->get_columns;
-      delete $data{$_} for qw/entered username userip/;
-
-      schema('daemon')->resultset('Admin')->update_or_create({
-        %data, status => 'queued', started => undef,
-      });
-  }
-  catch {  warn "error copying job: $_\n" };
-}
-
-sub revert_job {
-  my ($self, $id) = @_;
-
-  try {
-      schema('netdisco')->resultset('Admin')
-        ->find($id)
-        ->update({status => 'queued', started => undef});
-  }
-  catch {  warn "error reverting job: $_\n" };
 }
 
 1;

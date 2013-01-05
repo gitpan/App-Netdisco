@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.00_012';
+our $VERSION = '2.01_001';
 
 BEGIN {
   if (not length ($ENV{DANCER_APPDIR} || '')
@@ -58,9 +58,11 @@ Create a user on your system called C<netdisco> if one does not already exist.
 We'll install Netdisco and its dependencies into this user's home area, which
 will take about 200MB including MIB files.
 
-Netdisco uses the PostgreSQL (Pg) database server. Install Pg and then change
+ # useradd -m -p x -s /bin/bash nedisco
+
+Netdisco uses the PostgreSQL database server. Install PostgreSQL and then change
 to the PostgreSQL superuser (usually C<postgres>). Create a new database and
-Pg user for the Netdisco application:
+PostgreSQL user for the Netdisco application:
 
  postgres:~$ createuser -DRSP netdisco
  Enter password for new role:
@@ -77,9 +79,7 @@ install Netdisco and its dependencies into the C<netdisco> user's home area
  su - netdisco
  curl -L http://cpanmin.us/ | perl - --notest --quiet \
      --local-lib ~/perl5 \
-     App::cpanminus \
-     App::local::lib::helper \
-     http://cpan.metacpan.org/authors/id/O/OL/OLIVER/App-Netdisco-2.00_012.tar.gz
+     App::cpanminus App::local::lib::helper App::Netdisco
 
 Link some of the newly installed apps into the C<netdisco> user's C<$PATH>,
 e.g. C<~netdisco/bin>:
@@ -87,9 +87,9 @@ e.g. C<~netdisco/bin>:
  ln -s ~/perl5/bin/{localenv,netdisco-*} ~/bin/
 
 Test the installation by running the following command, which should only
-produce some help text (and throw up no errors):
+produce a status message (and throw up no errors):
 
- localenv netdisco-daemon
+ localenv netdisco-daemon status
 
 =head1 Configuration
 
@@ -143,6 +143,9 @@ For SQL debugging try the following command:
 
  DBIC_TRACE_PROFILE=console DBIC_TRACE=1 \
    DANCER_ENVDIR=~/environments plackup ~/bin/netdisco-web
+
+To run the job daemon in the foreground, start the C<netdisco-daemon-fg>
+program instead of C<netdisco-daemon>.
 
 =head1 Future Work
 
