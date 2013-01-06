@@ -16,7 +16,7 @@ requires 'HTML::Entities' => 0;
 requires 'HTTP::Tiny' => 0;
 requires 'JSON' => 0;
 requires 'List::MoreUtils' => 0;
-requires 'MCE' => 1.304;
+requires 'MCE' => 1.305;
 requires 'Net::MAC' => 0;
 requires 'NetAddr::IP' => 0;
 requires 'Path::Class' => 0;
@@ -28,7 +28,7 @@ requires 'Socket6' => 0;
 requires 'Template' => 0;
 requires 'YAML' => 0;
 requires 'namespace::clean' => 0;
-requires 'version' => 0;
+requires 'version' => 0.9901;
 
 install_share 'share';
 

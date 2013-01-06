@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.01_001';
+our $VERSION = '2.001000_001';
 
 BEGIN {
   if (not length ($ENV{DANCER_APPDIR} || '')
@@ -30,17 +30,18 @@ App::Netdisco - An open source web-based network management tool.
 
 =head1 Introduction
 
-The contents of this distribution is the next major version of the Netdisco
-network management tool. See L<http://netdisco.org/> for further information
-on the project.
+The content of this distribution is the next major version of the Netdisco
+network management tool. Pieces are still missing however, so if you're a new
+user please see L<http://netdisco.org/> for further information on the project
+and how to download the current official release.
 
-So far L<App::Netdisco> provides a web frontend and a backend daemon to handle
+L<App::Netdisco> provides a web frontend and a backend daemon to handle
 interactive requests such as changing port or device properties. There is not
 yet a device poller, so please still use the old Netdisco's discovery, arpnip,
 and macsuck.
 
-If you have any trouble getting the frontend running, please speak to someone
-in the C<#netdisco> IRC channel (on freenode).
+If you have any trouble getting the frontend running, speak to someone in the
+C<#netdisco> IRC channel (on freenode).
 
 =head1 Dependencies
 
@@ -56,14 +57,16 @@ With those two installed, we can proceed...
 
 Create a user on your system called C<netdisco> if one does not already exist.
 We'll install Netdisco and its dependencies into this user's home area, which
-will take about 200MB including MIB files.
+will take about 250MB including MIB files.
 
- # useradd -m -p x -s /bin/bash nedisco
+ root:~# useradd -m -p x -s /bin/bash nedisco
 
 Netdisco uses the PostgreSQL database server. Install PostgreSQL and then change
 to the PostgreSQL superuser (usually C<postgres>). Create a new database and
 PostgreSQL user for the Netdisco application:
 
+ root:~# su - postgres
+  
  postgres:~$ createuser -DRSP netdisco
  Enter password for new role:
  Enter it again:
@@ -84,12 +87,13 @@ install Netdisco and its dependencies into the C<netdisco> user's home area
 Link some of the newly installed apps into the C<netdisco> user's C<$PATH>,
 e.g. C<~netdisco/bin>:
 
+ mkdir ~/bin
  ln -s ~/perl5/bin/{localenv,netdisco-*} ~/bin/
 
 Test the installation by running the following command, which should only
 produce a status message (and throw up no errors):
 
- localenv netdisco-daemon status
+ ~/bin/netdisco-daemon status
 
 =head1 Configuration
 
@@ -113,7 +117,7 @@ release of Netdisco (1.x). You also need vendor MAC address prefixes (OUI
 data) and some MIBs if you want to run the daemon. The following script will
 take care of all this for you:
 
- DANCER_ENVDIR=~/environments localenv netdisco-deploy
+ DANCER_ENVDIR=~/environments ~/bin/localenv netdisco-deploy
 
 If you don't want that level of automation, check out the database schema diff
 from the current release of Netdisco, and apply it yourself:
@@ -122,16 +126,13 @@ from the current release of Netdisco, and apply it yourself:
 
 =head1 Startup
 
-Run the following command to start the web server:
+Run the following command to start the web-app server as a daemon:
 
- DANCER_ENVDIR=~/environments localenv plackup ~/bin/netdisco-web
+ DANCER_ENVDIR=~/environments ~/bin/netdisco-web start
 
-Other ways to run and host the web application can be found in the
-L<Dancer::Deployment> page. See also the L<plackup> documentation.
+Run the following command to start the job control daemon (port control, etc):
 
-Run the following command to start the daemon:
-
- DANCER_ENVDIR=~/environments localenv netdisco-daemon start
+ DANCER_ENVDIR=~/environments ~/bin/netdisco-daemon start
 
 =head1 Tips and Tricks
 
@@ -139,24 +140,34 @@ The main black navigation bar has a search box which is smart enough to work
 out what you're looking for in most cases. For example device names, node IP
 or MAC addreses, VLAN numbers, and so on.
 
-For SQL debugging try the following command:
+For SQL debugging try the following commands:
 
  DBIC_TRACE_PROFILE=console DBIC_TRACE=1 \
-   DANCER_ENVDIR=~/environments plackup ~/bin/netdisco-web
+   DANCER_ENVDIR=~/environments ~/bin/localenv plackup ~/bin/netdisco-web-fg
+  
+ DBIC_TRACE_PROFILE=console DBIC_TRACE=1 \
+   DANCER_ENVDIR=~/environments ~/bin/localenv netdisco-daemon-fg
 
-To run the job daemon in the foreground, start the C<netdisco-daemon-fg>
-program instead of C<netdisco-daemon>.
+Other ways to run and host the web application can be found in the
+L<Dancer::Deployment> page. See also the L<plackup> documentation.
+
+With the default configuration user authentication is disabled and the default
+"guest" user has no special privilege. To grant port and device control rights
+to this user, create a row in the C<users> table of the Netdisco database with
+a username of C<guest> and the C<port_control> flag set to true:
+
+ netdisco=> insert into users (username, port_control) values ('guest', true);
 
 =head1 Future Work
+
+Bundled with this app is a L<DBIx::Class> layer for the Netdisco database.
+This could be a starting point for an "official" DBIC layer. Helper functions
+and canned searches have been added to support the web interface.
 
 The intention is to support "plugins" for additonal features, most notably
 columns in the Device Port listing, but also new menu items and tabs. The
 design of this is sketched out but not implemented. The goal is to avoid
 patching core code to add localizations or less widely used features.
-
-Bundled with this app is a L<DBIx::Class> layer for the Netdisco database.
-This could be a starting point for an "official" DBIC layer. Helper functions
-and canned searches have been added to support the web interface.
 
 =head1 Caveats
 
