@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.002000';
+our $VERSION = '2.004000';
 
 BEGIN {
   if (not length ($ENV{DANCER_APPDIR} || '')
@@ -59,7 +59,7 @@ Create a user on your system called C<netdisco> if one does not already exist.
 We'll install Netdisco and its dependencies into this user's home area, which
 will take about 250MB including MIB files.
 
- root:~# useradd -m -p x -s /bin/bash nedisco
+ root:~# useradd -m -p x -s /bin/bash netdisco
 
 Netdisco uses the PostgreSQL database server. Install PostgreSQL and then change
 to the PostgreSQL superuser (usually C<postgres>). Create a new database and
@@ -126,7 +126,7 @@ from the current release of Netdisco, and apply it yourself:
 
 =head1 Startup
 
-Run the following command to start the web-app server as a daemon:
+Run the following command to start the web-app server as a daemon (port 5000):
 
  DANCER_ENVDIR=~/environments ~/bin/netdisco-web start
 
