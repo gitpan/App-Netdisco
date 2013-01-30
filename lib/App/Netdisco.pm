@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.004000';
+our $VERSION = '2.004002';
 
 BEGIN {
   if (not length ($ENV{DANCER_APPDIR} || '')
@@ -34,6 +34,14 @@ The content of this distribution is the next major version of the Netdisco
 network management tool. Pieces are still missing however, so if you're a new
 user please see L<http://netdisco.org/> for further information on the project
 and how to download the current official release.
+
+=over 4
+
+=item *
+
+See the demo at: L<http://demo-ollyg.dotcloud.com/netdisco/>
+
+=back
 
 L<App::Netdisco> provides a web frontend and a backend daemon to handle
 interactive requests such as changing port or device properties. There is not
@@ -134,6 +142,9 @@ Run the following command to start the job control daemon (port control, etc):
 
  DANCER_ENVDIR=~/environments ~/bin/netdisco-daemon start
 
+You should (of course) avoid running this Netdisco daemon and the legacy
+daemon at the same time.
+
 =head1 Tips and Tricks
 
 The main black navigation bar has a search box which is smart enough to work
@@ -157,6 +168,13 @@ to this user, create a row in the C<users> table of the Netdisco database with
 a username of C<guest> and the C<port_control> flag set to true:
 
  netdisco=> insert into users (username, port_control) values ('guest', true);
+
+=head1 Upgrading
+
+Simply install this module again, then upgrade the database schema:
+
+ ~/bin/localenv cpanm --quiet --notest App::Netdisco
+ DANCER_ENVDIR=~/environments ~/bin/localenv netdisco-deploy
 
 =head1 Future Work
 

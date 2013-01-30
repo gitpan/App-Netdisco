@@ -1,3 +1,23 @@
+2.004002 - 2013-01-30
+
+  [BUG FIXES]
+
+  * Typo in one of the schema migration files
+
+2.004001 - 2013-01-29
+
+  [ENHANCEMENTS]
+
+  * Device Port filter by vlan includes both tagging and untagged (closes #37)
+  * Change colour and name of Port Control toggle option in Device Port View
+  * Incorporate latest DB schema changes from upstream
+  * Add some doc clarifcations
+
+  [BUG FIXES]
+
+  * No longer prompt for demo/demo credentials (closes #38) (J. Binks)
+  * Display IP in Vlan search if device has no DNS (closes #36) (J. Binks)
+
 2.004000 - 2013-01-14
 
   [BUG FIXES]
