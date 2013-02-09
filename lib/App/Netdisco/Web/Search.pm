@@ -5,175 +5,60 @@ use Dancer::Plugin::Ajax;
 use Dancer::Plugin::DBIC;
 
 use NetAddr::IP::Lite ':lower';
-use Net::MAC ();
-use List::MoreUtils ();
 
 hook 'before' => sub {
-    # view settings for node options
-    var('node_options' => [
-      { name => 'stamps', label => 'Time Stamps', default => 'on' },
-    ]);
-    # view settings for device options
-    var('device_options' => [
-      { name => 'matchall', label => 'Match All Options', default => 'on' },
-    ]);
+  # view settings for node options
+  var('node_options' => [
+    { name => 'stamps', label => 'Time Stamps', default => 'on' },
+  ]);
 
-    # new searches will use these defaults in their sidebars
-    var('search_node'   => uri_for('/search', {tab => 'node'}));
-    var('search_device' => uri_for('/search', {tab => 'device'}));
+  # view settings for device options
+  var('device_options' => [
+    { name => 'matchall', label => 'Match All Options', default => 'on' },
+  ]);
 
-    foreach my $col (@{ var('node_options') }) {
-        next unless $col->{default} eq 'on';
-        var('search_node')->query_param($col->{name}, 'checked');
-    }
+  return unless (request->path eq uri_for('/search')->path
+      or index(request->path, uri_for('/ajax/content/search')->path) == 0);
 
-    foreach my $col (@{ var('device_options') }) {
-        next unless $col->{default} eq 'on';
-        var('search_device')->query_param($col->{name}, 'checked');
-    }
+  foreach my $col (@{ var('node_options') }) {
+      next unless $col->{default} eq 'on';
+      params->{$col->{name}} = 'checked'
+        if not param('tab') or param('tab') ne 'node';
+  }
 
-    if (request->path eq uri_for('/search')->path
-        or index(request->path, uri_for('/ajax/content/search')->path) == 0) {
-
-        foreach my $col (@{ var('node_options') }) {
-            next unless $col->{default} eq 'on';
-            params->{$col->{name}} = 'checked'
-              if not param('tab') or param('tab') ne 'node';
-        }
-
-        foreach my $col (@{ var('device_options') }) {
-            next unless $col->{default} eq 'on';
-            params->{$col->{name}} = 'checked'
-              if not param('tab') or param('tab') ne 'device';
-        }
-
-        # used in the device search sidebar template to set selected items
-        foreach my $opt (qw/model vendor os_ver/) {
-            my $p = (ref [] eq ref param($opt) ? param($opt)
-                                               : (param($opt) ? [param($opt)] : []));
-            var("${opt}_lkp" => { map { $_ => 1 } @$p });
-        }
-    }
+  foreach my $col (@{ var('device_options') }) {
+      next unless $col->{default} eq 'on';
+      params->{$col->{name}} = 'checked'
+        if not param('tab') or param('tab') ne 'device';
+  }
 };
 
-# device with various properties or a default match-all
-ajax '/ajax/content/search/device' => sub {
-    my $has_opt = List::MoreUtils::any {param($_)}
-      qw/name location dns ip description model os_ver vendor/;
-    my $set;
+hook 'before_template' => sub {
+  my $tokens = shift;
 
-    if ($has_opt) {
-        $set = schema('netdisco')->resultset('Device')->search_by_field(scalar params);
-    }
-    else {
-        my $q = param('q');
-        return unless $q;
+  # new searches will use these defaults in their sidebars
+  $tokens->{search_node}   = uri_for('/search', {tab => 'node'});
+  $tokens->{search_device} = uri_for('/search', {tab => 'device'});
 
-        $set = schema('netdisco')->resultset('Device')->search_fuzzy($q);
-    }
-    return unless $set->count;
+  foreach my $col (@{ var('node_options') }) {
+      next unless $col->{default} eq 'on';
+      $tokens->{search_node}->query_param($col->{name}, 'checked');
+  }
 
-    content_type('text/html');
-    template 'ajax/search/device.tt', {
-      results => $set,
-    }, { layout => undef };
-};
+  foreach my $col (@{ var('device_options') }) {
+      next unless $col->{default} eq 'on';
+      $tokens->{search_device}->query_param($col->{name}, 'checked');
+  }
 
-# nodes matching the param as an IP or DNS hostname or MAC
-ajax '/ajax/content/search/node' => sub {
-    my $node = param('q');
-    return unless $node;
-    content_type('text/html');
+  return unless (request->path eq uri_for('/search')->path
+      or index(request->path, uri_for('/ajax/content/search')->path) == 0);
 
-    my $mac = Net::MAC->new(mac => $node, 'die' => 0, verbose => 0);
-    my @active = (param('archived') ? () : (-bool => 'active'));
-
-    if (! $mac->get_error) {
-        my $sightings = schema('netdisco')->resultset('Node')
-          ->search_by_mac({mac => $mac->as_IEEE, @active});
-
-        my $ips = schema('netdisco')->resultset('NodeIp')
-          ->search_by_mac({mac => $mac->as_IEEE, @active});
-
-        my $ports = schema('netdisco')->resultset('DevicePort')
-          ->search({mac => $mac->as_IEEE});
-
-        return unless $sightings->count
-            or $ips->count
-            or $ports->count;
-
-        template 'ajax/search/node_by_mac.tt', {
-          ips => $ips,
-          sightings => $sightings,
-          ports => $ports,
-        }, { layout => undef };
-    }
-    else {
-        my $set;
-
-        if (my $ip = NetAddr::IP::Lite->new($node)) {
-            # search_by_ip() will extract cidr notation if necessary
-            $set = schema('netdisco')->resultset('NodeIp')
-              ->search_by_ip({ip => $ip, @active});
-        }
-        else {
-            if (param('partial')) {
-                $node = "\%$node\%";
-            }
-            elsif (setting('domain_suffix')) {
-                $node .= setting('domain_suffix')
-                    if index($node, setting('domain_suffix')) == -1;
-            }
-            $set = schema('netdisco')->resultset('NodeIp')
-              ->search_by_dns({dns => $node, @active});
-        }
-        return unless $set and $set->count;
-
-        template 'ajax/search/node_by_ip.tt', {
-          macs => $set,
-          archive_filter => {@active},
-        }, { layout => undef };
-    }
-};
-
-# devices carrying vlan xxx
-ajax '/ajax/content/search/vlan' => sub {
-    my $q = param('q');
-    return unless $q;
-    my $set;
-
-    if ($q =~ m/^\d+$/) {
-        $set = schema('netdisco')->resultset('Device')->carrying_vlan({vlan => $q});
-    }
-    else {
-        $set = schema('netdisco')->resultset('Device')->carrying_vlan_name({name => $q});
-    }
-    return unless $set->count;
-
-    content_type('text/html');
-    template 'ajax/search/vlan.tt', {
-      results => $set,
-    }, { layout => undef };
-};
-
-# device ports with a description (er, name) matching
-ajax '/ajax/content/search/port' => sub {
-    my $q = param('q');
-    return unless $q;
-    my $set;
-
-    if ($q =~ m/^\d+$/) {
-        $set = schema('netdisco')->resultset('DevicePort')->search({vlan => $q});
-    }
-    else {
-        $set = schema('netdisco')->resultset('DevicePort')->search({name => $q});
-    }
-    return unless $set->count;
-
-    content_type('text/html');
-    template 'ajax/search/port.tt', {
-      results => $set,
-    }, { layout => undef };
+  # used in the device search sidebar template to set selected items
+  foreach my $opt (qw/model vendor os_ver/) {
+      my $p = (ref [] eq ref param($opt) ? param($opt)
+                                          : (param($opt) ? [param($opt)] : []));
+      $tokens->{"${opt}_lkp"} = { map { $_ => 1 } @$p };
+  }
 };
 
 get '/search' => sub {
@@ -226,25 +111,15 @@ get '/search' => sub {
     }
 
     # used in the device search sidebar to populate select inputs
-    var('model_list' => [
-      schema('netdisco')->resultset('Device')->get_distinct_col('model')
-    ]);
-    var('os_ver_list' => [
-      schema('netdisco')->resultset('Device')->get_distinct_col('os_ver')
-    ]);
-    var('vendor_list' => [
-      schema('netdisco')->resultset('Device')->get_distinct_col('vendor')
-    ]);
+    my $model_list  = [ schema('netdisco')->resultset('Device')->get_distinct_col('model')  ];
+    my $os_ver_list = [ schema('netdisco')->resultset('Device')->get_distinct_col('os_ver') ];
+    my $vendor_list = [ schema('netdisco')->resultset('Device')->get_distinct_col('vendor') ];
 
-    # list of tabs
-    var('tabs' => [
-        { id => 'device', label => 'Device' },
-        { id => 'node',   label => 'Node'   },
-        { id => 'vlan',   label => 'VLAN'   },
-        { id => 'port',   label => 'Port'   },
-    ]);
-
-    template 'search';
+    template 'search', {
+      model_list  => $model_list,
+      os_ver_list => $os_ver_list,
+      vendor_list => $vendor_list,
+    };
 };
 
 true;
