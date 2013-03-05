@@ -23,19 +23,10 @@ plugins:
       schema_class: 'App::Netdisco::DB'
       dsn: 'dbi:Pg:dbname=netdisco;host=localhost'
       user: 'changeme'
-      pass: 'netdisco'
+      pass: 'changeme'
       options:
         RaiseError: 1
         AutoCommit: 1
-    # please do not change/remove this schema unless you
-    # know what you are doing!
-    daemon:
-      schema_class: 'App::Netdisco::Daemon::DB'
-      dsn: 'dbi:SQLite:dbname=:memory:'
-      options:
-        RaiseError: 1
-        AutoCommit: 1
-        sqlite_use_immediate_transaction: 1
 
 # uncomment and set to 1 to disable authentication/login
 # no_auth: 0
@@ -43,4 +34,15 @@ plugins:
 # will be stripped from fqdn when displayed in the web UI
 # also, do not forget the leading dot
 # domain_suffix: '.example.com'
+
+# local settings for Netdisco poller and port changes
+
+mibhome: '/home/netdisco/netdisco-mibs'
+mibdirs:
+  - cisco
+  - rfc
+  - net-snmp
+
+community: ['public']
+community_rw: ['private']
 

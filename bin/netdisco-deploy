@@ -1,11 +1,41 @@
 #!/usr/bin/env perl
 
 use FindBin;
-use lib "$FindBin::Bin/../lib";
-use App::Netdisco;
+FindBin::again();
+our $home;
 
+BEGIN {
+  # try really hard to find a localenv if one isn't already in place.
+  $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
+  eval "use Daemon::Control";
+
+  if ($@) {
+      use File::Spec;
+      my $localenv = File::Spec->catfile($FindBin::RealBin, 'localenv');
+      exec($localenv, $0, @ARGV) if -f $localenv;
+      $localenv = File::Spec->catfile($home, 'perl5', 'bin', 'localenv');
+      exec($localenv, $0, @ARGV) if -f $localenv;
+      die "Sorry, can't find libs required for App::Netdisco.\n";
+  }
+}
+
+BEGIN {
+  # stuff useful locations into @INC and $PATH
+  my $location = $FindBin::RealBin;
+
+  use Path::Class;
+  unshift @INC,
+    dir($location)->parent->subdir('lib')->stringify,
+    dir($location, 'lib')->stringify;
+
+  use Config;
+  $ENV{PATH} = $location . $Config{path_sep} . $ENV{PATH};
+}
+
+use App::Netdisco;
 use Dancer ':script';
 use Dancer::Plugin::DBIC 'schema';
+info "App::Netdisco version $App::Netdisco::VERSION loaded.";
 
 use 5.010_000;
 use Term::UI;
@@ -23,14 +53,15 @@ these is an optional service which the user is asked to confirm.
 Pre-existing requirements are that there be a database table created and a
 user with rights to create tables in that database. Both the table and user
 name must match those configured in your environment YAML file (default
-C<environments/development.yml>).
+C<~/environments/deployment.yml>).
 
 This script will download the latest MAC address vendor prefix data from the
 Internet, and update the OUI table in the database. Hence Internet access is
 required to run the script.
 
 Similarly the latest Netdisco MIB bundle is also downloaded, placed into the
-user's home directory, and Netdisco reconfigured for its use.
+user's home directory (or C<$ENV{NETDISCO_HOME}>), and Netdisco reconfigured
+for its use.
 
 =cut
 
@@ -40,7 +71,7 @@ say 'Before we continue, the following prerequisites must be in place:';
 say ' * Internet access';
 say ' * Database added to PostgreSQL for Netdisco';
 say ' * User added to PostgreSQL with rights to the Netdisco Database';
-say ' * "environments/development.yml" file configured with Database dsn/user/pass';
+say ' * "~/environments/deployment.yml" file configured with Database dsn/user/pass';
 say ' * A full backup of any existing Netdisco database data';
 say '';
 say 'You will be asked to confirm all changes to your system.';
@@ -108,12 +139,12 @@ sub deploy_oui {
 
 sub deploy_mibs {
   my $url = 'http://downloads.sourceforge.net/project/netdisco/netdisco-mibs/latest-snapshot/netdisco-mibs-snapshot.tar.gz';
-  my $file = "$ENV{HOME}/netdisco-mibs-snapshot.tar.gz";
+  my $file = file($home, 'netdisco-mibs-snapshot.tar.gz');
   my $resp = HTTP::Tiny->new->mirror($url, $file);
 
   if ($resp->{success}) {
       my $ae = Archive::Extract->new(archive => $file, type => 'tgz');
-      $ae->extract(to => $ENV{HOME});
+      $ae->extract(to => $home);
       unlink $file;
   }
 

@@ -1,3 +1,29 @@
+2.005000_003 - 2013-03-05
+
+  [NEW FEATURES]
+
+  * Partial Match option when searching on device port name
+  * web,daemon,deploy scripts will try to find "localenv" automatically
+  * Scripts can be run from a git clone
+  * New NETDISCO_HOME env var to override Netdisco's HOME
+
+  [ENHANCEMENTS]
+
+  * random() and LIMIT the number of daemon jobs requested from Netdisco queue
+  * Remove Daemon's job queue DBIC schema from user config
+  * Add log messages to the Daemon
+  * Use Path::Class for path and file name construction consistently
+  * All links and redirects are now relative
+  * More documentation on developing and deployment
+
+  [BUG FIXES]
+
+  * Avoid use of DNS when looking up devices in DB by IP
+  * Search by device port MAC no longer fatal
+  * URI and HTML escape template variables
+  * Prevent duplicate requets caused by favicon.ico link
+  * DB Schema upgrades are now all single-step in case user has applied any already
+
 2.005000_002 - 2013-02-10
 
   [ENHANCEMENTS]
@@ -5,6 +31,7 @@
   * When linking to devices, use the DNS name in preference to the IP
     (makes for more attractive navigation search bar, but need to watch for aliases)
   * In general, device names do not have domain_suffix trimmed, but nodes do
+  * Search on device interface alias now works for typeahead and device redirect
 
   [BUG FIXES]
 

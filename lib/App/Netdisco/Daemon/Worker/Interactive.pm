@@ -13,8 +13,10 @@ with 'App::Netdisco::Daemon::Worker::Interactive::DeviceActions',
 
 sub worker_body {
   my $self = shift;
+  my $wid = $self->wid;
 
   while (1) {
+      debug "int ($wid): asking for a job";
       my $jobs = $self->do('take_jobs', $self->wid, 'Interactive');
 
       foreach my $candidate (@$jobs) {
@@ -23,14 +25,17 @@ sub worker_body {
           # (will throw an exception)
           my $job = schema('daemon')->resultset('Admin')
                       ->new_result($candidate);
+          my $jid = $job->job;
 
           my $target = 'set_'. $job->action;
           next unless $self->can($target);
+          debug "int ($wid): can ${target}() for job $jid";
 
           # do job
           my ($status, $log);
           try {
               $job->started(scalar localtime);
+              info sprintf "int (%s): starting job %s at %s", $wid, $jid, $job->started;
               ($status, $log) = $self->$target($job);
           }
           catch {
@@ -42,12 +47,16 @@ sub worker_body {
           $self->close_job($job, $status, $log);
       }
 
+      debug "int ($wid): sleeping now...";
       sleep( setting('daemon_sleep_time') || 5 );
   }
 }
 
 sub close_job {
   my ($self, $job, $status, $log) = @_;
+  my $now = scalar localtime;
+  info sprintf "int (%s): wrapping up job %s - status %s at %s",
+    $self->wid, $job->job, $status, $now;
 
   try {
       schema('netdisco')->resultset('Admin')
@@ -56,7 +65,7 @@ sub close_job {
           status => $status,
           log => $log,
           started => $job->started,
-          finished => \'now()',
+          finished => $now,
         });
   }
   catch { $self->sendto('stderr', "error closing job: $_\n") };

@@ -7,18 +7,24 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.005000_002';
+our $VERSION = '2.005000_003';
 
 BEGIN {
   if (not length ($ENV{DANCER_APPDIR} || '')
       or not -f file($ENV{DANCER_APPDIR}, 'config.yml')) {
 
       my $auto = dir(dist_dir('App-Netdisco'))->absolute;
+      my $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
 
       $ENV{DANCER_APPDIR}  ||= $auto->stringify;
       $ENV{DANCER_CONFDIR} ||= $auto->stringify;
 
-      $ENV{DANCER_ENVDIR} ||= $auto->subdir('environments')->stringify;
+      my $test_envdir = dir($home, 'environments')->stringify;
+      $ENV{DANCER_ENVDIR} ||= (-d $test_envdir
+        ? $test_envdir : $auto->subdir('environments')->stringify);
+
+      $ENV{DANCER_ENVIRONMENT} ||= 'deployment';
+
       $ENV{DANCER_PUBLIC} ||= $auto->subdir('public')->stringify;
       $ENV{DANCER_VIEWS}  ||= $auto->subdir('views')->stringify;
   }
@@ -83,17 +89,21 @@ PostgreSQL user for the Netdisco application:
 
 =head1 Installation
 
+The following is a general guide which works well in most circumstances. It
+assumes you have a user C<netdisco> on your system, that you want to perform
+an on-line installation, and have the application run self-contained from
+within that user's home. There are alternatives: see the
+L<Deployment|App::Netdisco::Manual::Deployment> documentation for further
+details.
+
 To avoid muddying your system, use the following script to download and
 install Netdisco and its dependencies into the C<netdisco> user's home area
-(C<~netdisco/perl5>).
+(C<~netdisco/perl5>):
 
  su - netdisco
- curl -L http://cpanmin.us/ | perl - --notest --quiet \
-     --local-lib ~/perl5 \
-     App::cpanminus App::local::lib::helper App::Netdisco
+ curl -L http://cpanmin.us/ | perl - --notest --verbose --local-lib ~/perl5 App::Netdisco
 
-Link some of the newly installed apps into the C<netdisco> user's C<$PATH>,
-e.g. C<~netdisco/bin>:
+Link some of the newly installed apps into a handy location:
 
  mkdir ~/bin
  ln -s ~/perl5/bin/{localenv,netdisco-*} ~/bin/
@@ -109,14 +119,15 @@ Make a directory for your local configuration and copy the configuration
 template from this distribution:
 
  mkdir ~/environments
- cp ~/perl5/lib/perl5/auto/share/dist/App-Netdisco/environments/development.yml ~/environments
- chmod +w ~/environments/development.yml
+ cp ~/perl5/lib/perl5/auto/share/dist/App-Netdisco/environments/deployment.yml ~/environments
+ chmod +w ~/environments/deployment.yml
 
 Edit the file and change the database connection parameters to match those for
 your local system (that is, the C<dsn>, C<user> and C<pass>).
 
-Optionally, in the same file uncomment and edit the C<domain_suffix> setting
-to be appropriate for your local site.
+In the same file uncomment and edit the C<domain_suffix> setting to be
+appropriate for your local site. Optionally, set the C<no_auth> value to true
+if you wish to skip user authentication in the web interface.
 
 =head1 Bootstrap
 
@@ -125,32 +136,29 @@ release of Netdisco (1.x). You also need vendor MAC address prefixes (OUI
 data) and some MIBs if you want to run the daemon. The following script will
 take care of all this for you:
 
- DANCER_ENVDIR=~/environments ~/bin/localenv netdisco-deploy
-
-If you don't want that level of automation, check out the database schema diff
-from the current release of Netdisco, and apply it yourself:
-
- ~/perl5/lib/perl5/App/Netdisco/DB/schema_versions/App-Netdisco-DB-2-3-PostgreSQL.sql
+ ~/bin/netdisco-deploy
 
 =head1 Startup
 
-Run the following command to start the web-app server as a daemon (port 5000):
+Run the following command to start the web-app server as a backgrounded daemon
+(listening on port 5000):
 
- DANCER_ENVDIR=~/environments ~/bin/netdisco-web start
+ ~/bin/netdisco-web start
 
 Run the following command to start the job control daemon (port control, etc):
 
- DANCER_ENVDIR=~/environments ~/bin/netdisco-daemon start
+ ~/bin/netdisco-daemon start
 
-You should (of course) avoid running this Netdisco daemon and the legacy
-daemon at the same time.
+You should take care not to run this Netdisco daemon and the legacy daemon at
+the same time.
 
 =head1 Upgrading
 
 Simply install this module again, then upgrade the database schema:
 
- ~/bin/localenv cpanm --quiet --notest App::Netdisco
- DANCER_ENVDIR=~/environments ~/bin/localenv netdisco-deploy
+ ~/bin/localenv cpanm --notest App::Netdisco
+ ~/bin/netdisco-deploy
+ ~/bin/netdisco-web restart
 
 =head1 Tips and Tricks
 
@@ -159,21 +167,6 @@ Simply install this module again, then upgrade the database schema:
 The main black navigation bar has a search box which is smart enough to work
 out what you're looking for in most cases. For example device names, node IP
 or MAC addreses, VLAN numbers, and so on.
-
-=head2 SQL and HTTP Trace
-
-For SQL debugging try the following commands:
-
- DBIC_TRACE_PROFILE=console DBIC_TRACE=1 \
-   DANCER_ENVDIR=~/environments ~/bin/localenv plackup ~/bin/netdisco-web-fg
-  
- DBIC_TRACE_PROFILE=console DBIC_TRACE=1 \
-   DANCER_ENVDIR=~/environments ~/bin/localenv netdisco-daemon-fg
-
-=head2 Deployment
-
-Other ways to run and host the web application can be found in the
-L<Dancer::Deployment> page. See also the L<plackup> documentation.
 
 =head2 User Rights
 

@@ -4,8 +4,6 @@ use Dancer ':syntax';
 use Dancer::Plugin::Ajax;
 use Dancer::Plugin::DBIC;
 
-use NetAddr::IP::Lite ':lower';
-
 hook 'before' => sub {
   # list of port detail columns
   var('port_columns' => [
@@ -87,20 +85,22 @@ hook 'before_template' => sub {
 };
 
 get '/device' => sub {
-    my $ip = NetAddr::IP::Lite->new(param('q'));
-    if (! $ip) {
-        redirect uri_for('/', {nosuchdevice => 1});
-        return;
-    }
+    my $q = param('q');
+    my $dev = schema('netdisco')->resultset('Device')->single({
+        -or => [
+            \[ 'host(me.ip) = ?' => [ bind_value => $q ] ],
+            'me.dns' => $q,
+        ],
+    });
 
-    my $device = schema('netdisco')->resultset('Device')->find($ip->addr);
-    if (! $device) {
-        redirect uri_for('/', {nosuchdevice => 1});
+    if (!defined $dev) {
+        status(302);
+        header(Location => uri_for('/', {nosuchdevice => 1})->path_query());
         return;
     }
 
     params->{'tab'} ||= 'details';
-    template 'device', { d => $device };
+    template 'device', { d => $dev };
 };
 
 true;

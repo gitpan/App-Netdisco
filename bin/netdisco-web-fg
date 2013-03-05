@@ -1,9 +1,53 @@
 #!/usr/bin/env perl
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use App::Netdisco;
+use strict;
+use warnings FATAL => 'all';
 
+use FindBin;
+FindBin::again();
+use Path::Class 'dir';
+
+BEGIN {
+  # stuff useful locations into @INC
+  unshift @INC,
+    dir($FindBin::RealBin)->parent->subdir('lib')->stringify,
+    dir($FindBin::RealBin, 'lib')->stringify;
+}
+
+use App::Netdisco;
 use Dancer;
+debug sprintf "App::Netdisco %s", ($App::Netdisco::VERSION || 'HEAD');
+
+my $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
+set('session_dir', dir($home, 'netdisco-web-sessions'));
+
+set plack_middlewares => [
+  [ Expires => (
+      content_type => [qw{ application/javascript text/css }, qr{image}],
+      expires => 'access plus 1 day',
+  )],
+  [ Static => (
+      path => qr{^/(?:javascripts|css|font|images)/},
+      root => $ENV{DANCER_PUBLIC},
+      pass_through => 1,
+  )],
+];
+
 use App::Netdisco::Web;
 dance;
+
+=head1 NAME
+
+netdisco-web-fg - Web Application for Netdisco
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<App::Netdisco>
+
+=back
+
+=cut
