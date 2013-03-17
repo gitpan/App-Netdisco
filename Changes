@@ -1,12 +1,28 @@
-2.006000 - 2013-03-07
+2.007000_001 - 2013-03-17
+
+  [NEW FEATURES]
+
+  * Reports are implemented (as plugins) - new Duplex Mismatch plugin
+  * Plugins can now 'register_template_path' and supply their own HTML templates
 
   [ENHANCEMENTS]
+
+  * Upgraded to Twitter Bootstrap 2.3.1 - customized for 13px font 18px line
+
+  [BUG FIXES]
+
+  * Convert useless die to error+return in Plugin.pm
+  * Documentation fixups
+
+2.006000 - 2013-03-07
+
+  [BUG FIXES]
 
   * Documentation fixups
 
 2.005000_004 - 2013-03-05
 
-  [ENHANCEMENTS]
+  [BUG FIXES]
 
   * Documentation fixups
 

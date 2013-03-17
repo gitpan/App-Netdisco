@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.006000';
+our $VERSION = '2.007000_001';
 
 BEGIN {
   if (not length ($ENV{DANCER_APPDIR} || '')
@@ -197,8 +197,8 @@ L<Deployment|App::Netdisco::Manual::Deployment> documentation.
 
 Bundled with this distribution is a L<DBIx::Class> layer for the Netdisco
 database. This abstracts away all the SQL into an elegant, re-usable OO
-interface. See the L<App::Netdisco::Developing> documentation for further
-information.
+interface. See the L<Developer|App::Netdisco::Manual::Developing>
+documentation for further information.
 
 =head2 Plugins
 
@@ -210,7 +210,7 @@ L<App::Netdisco::Web::Plugin> for further information.
 =head2 Developing
 
 Lots of information about the architecture of this application is contained
-within the L<App::Netdisco::Developing> documentation.
+within the L<Developer|App::Netdisco::Manual::Developing> documentation.
 
 =head1 Caveats
 
