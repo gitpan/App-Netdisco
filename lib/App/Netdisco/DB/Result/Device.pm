@@ -110,6 +110,22 @@ Returns the set of ports on this Device.
 
 __PACKAGE__->has_many( ports => 'App::Netdisco::DB::Result::DevicePort', 'ip' );
 
+=head2 modules
+
+Returns the set chassis modules on this Device.
+
+=cut
+
+__PACKAGE__->has_many( modules => 'App::Netdisco::DB::Result::DeviceModule', 'ip' );
+
+=head2 power_modules
+
+Returns the set of power modules on this Device.
+
+=cut
+
+__PACKAGE__->has_many( power_modules => 'App::Netdisco::DB::Result::DevicePower', 'ip' );
+
 =head2 port_vlans
 
 Returns the set of VLANs known to be configured on Ports on this Device,
@@ -128,7 +144,51 @@ __PACKAGE__->has_many(
 # helper which assumes we've just RIGHT JOINed to Vlans table
 sub vlan { return (shift)->vlans->first }
 
+=head2 wireless_ports
+
+Returns the set of wireless IDs known to be configured on Ports on this
+Device.
+
+=cut
+
+__PACKAGE__->has_many(
+    wireless_ports => 'App::Netdisco::DB::Result::DevicePortWireless',
+    'ip', { join_type => 'RIGHT' }
+);
+
+=head2 ssids
+
+Returns the set of SSIDs known to be configured on Ports on this Device.
+
+=cut
+
+__PACKAGE__->has_many(
+    ssids => 'App::Netdisco::DB::Result::DevicePortSsid',
+    'ip', { join_type => 'RIGHT' }
+);
+
+=head2 powered_ports
+
+Returns the set of ports known to have PoE capability
+
+=cut
+
+__PACKAGE__->has_many(
+    powered_ports => 'App::Netdisco::DB::Result::DevicePortPower',
+    'ip', { join_type => 'RIGHT' }
+);
+
 =head1 ADDITIONAL COLUMNS
+
+=head2 port_count
+
+Returns the number of ports on this device. Enable this
+column by applying the C<with_port_count()> modifier to C<search()>.
+
+=cut
+
+sub port_count { return (shift)->get_column('port_count') }
+
 
 =head2 uptime_age
 

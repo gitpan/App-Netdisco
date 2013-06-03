@@ -1,5 +1,5 @@
 
-            <p class="nd_sidebar_title"><em>Node Search Options</em></p>
+            <p class="nd_sidebar-title"><em>Node Search Options</em></p>
             <input name="q" value="[% params.q | html_entity %]" type="hidden"/>
             <div class="clearfix input-prepend">
               <label class="add-on">
@@ -31,11 +31,19 @@
             </div>
             <div class="clearfix input-prepend">
               <label class="add-on">
-                <input type="checkbox" id="partial"
+                <input type="checkbox" id="node_partial"
                   name="partial"[% ' checked="checked"' IF params.partial %]/>
               </label>
-              <label class="nd_checkboxlabel" for="partial">
+              <label class="nd_checkboxlabel" for="node_partial">
                 <span class="nd_searchcheckbox uneditable-input">Partial Name</span>
               </label>
+            </div>
+            <div class="clearfix">
+              <em class="muted">MAC address format:</em><br/>
+              <select id="nd_node-mac-format" name="mac_format">
+                [% FOREACH format IN [ 'IEEE', 'Cisco', 'Microsoft', 'Sun' ] %]
+                <option[% ' selected="selected"' IF params.mac_format == format %]>[% format %]</option>
+                [% END %]
+              </select>
             </div>
             <button id="[% tab.id %]_submit" type="submit" class="btn btn-info">Search Again</button>

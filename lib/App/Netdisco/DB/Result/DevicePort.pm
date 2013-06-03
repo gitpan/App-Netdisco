@@ -7,6 +7,8 @@ package App::Netdisco::DB::Result::DevicePort;
 use strict;
 use warnings;
 
+use MIME::Base64 'encode_base64url';
+
 use base 'DBIx::Class::Core';
 __PACKAGE__->table("device_port");
 __PACKAGE__->add_columns(
@@ -51,6 +53,10 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "remote_id",
   { data_type => "text", is_nullable => 1 },
+  "manual_topo",
+  { data_type => "bool", is_nullable => 0, default_value => \"false" },
+  "is_uplink",
+  { data_type => "bool", is_nullable => 1 },
   "vlan",
   { data_type => "text", is_nullable => 1 },
   "pvid",
@@ -72,7 +78,19 @@ Returns the Device table entry to which the given Port is related.
 
 =cut
 
-__PACKAGE__->belongs_to( device => 'App::Netdisco::DB::Result::Device', 'ip');
+__PACKAGE__->belongs_to( device => 'App::Netdisco::DB::Result::Device', 'ip' );
+
+=head2 vlans
+
+Returns the set of C<device_port_vlan> entries associated with this Port.
+
+These will be both native and non-native (tagged). See also
+C<port_vlans_tagged> and C<tagged_vlans>.
+
+=cut
+
+__PACKAGE__->has_many( vlans => 'App::Netdisco::DB::Result::DevicePortVlan',
+  { 'foreign.ip' => 'self.ip', 'foreign.port' => 'self.port' } );
 
 =head2 nodes / active_nodes / nodes_with_age / active_nodes_with_age
 
@@ -249,5 +267,14 @@ See the C<with_is_free> and C<only_free_ports> modifiers to C<search()>.
 =cut
 
 sub is_free { return (shift)->get_column('is_free') }
+
+=head2 base64url_port
+
+Returns a Base64 encoded version of the C<port> column value suitable for use
+in a URL.
+
+=cut
+
+sub base64url_port { return encode_base64url((shift)->port) }
 
 1;

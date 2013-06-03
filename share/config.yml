@@ -3,7 +3,7 @@
 
 # Web app env-related settings should go to environments/$env.yml
 
-# Your application's name
+# application's name
 appname: "Netdisco"
 
 # The default web layout to use for your application (located in
@@ -18,6 +18,9 @@ charset: "UTF-8"
 # web sessions stored on disk
 session: "YAML"
 
+# HTTP port to listen on
+port: 5000
+
 # logging format
 logger_format: '[%P] %L @%D> %m'
 
@@ -30,11 +33,14 @@ engines:
     end_tag:   '%]'
     PRE_CHOMP: 1
 
-# netdisco stuff (can be overidden in the environment .yml)
+# Netdisco stuff (can be overidden in the environment .yml)
 
 web_plugins:
   - Inventory
   - Report::DuplexMismatch
+  - AdminTask::PseudoDevice
+  - AdminTask::Topology
+  - AdminTask::JobQueue
   - Search::Device
   - Search::Node
   - Search::VLAN
@@ -52,7 +58,12 @@ snmpver: 2
 snmpretries: 2
 snmptimeout: 1000000
 
-mibhome: /usr/share/netdisco/mibs
+# If unset, Netdisco uses "NETDISCO_HOME/netdisco-mibs", assuming you're
+# using the netdisco-deploy script to download MIBs there.  Otherwise, set
+# this, for example:
+#
+# mibhome: /usr/share/netdisco/mibs
+
 mibdirs:
   - cisco
   - rfc
@@ -70,8 +81,32 @@ portctl_vlans: 1
 # sleep time between polls of the database job queue
 daemon_sleep_time: 5
 
-# how many daemon processes
-# NB one worker will always be a Queue Manager
-daemon_pollers: 0
+# how many daemon processes for this node
 daemon_interactives: 2
+daemon_pollers: 2
 
+# what housekeeping tasks should this node *schedule*
+# (it only does them if daemon_pollers is non-zero)
+#housekeeping:
+#  discovernew:
+#    device: '192.0.2.0'
+#    when:
+#      wday: 'wed'
+#      hour: 14
+#  backup:
+#    when:
+#      hour: 1
+#  refresh:
+#    when: '0 9 * * *'
+#  arpwalk:
+#    when:
+#      min: 30
+#  macwalk:
+#    when:
+#      hour: '*/2'
+#  nbtwalk:
+#    when:
+#      hour: '8,13,21'
+#  saveconfigs:
+#    param: 61
+#    when: '0 * * * *'

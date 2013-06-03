@@ -7,6 +7,8 @@ package App::Netdisco::DB::Result::Node;
 use strict;
 use warnings;
 
+use Net::MAC;
+
 use base 'DBIx::Class::Core';
 __PACKAGE__->table("node");
 __PACKAGE__->add_columns(
@@ -42,7 +44,7 @@ __PACKAGE__->add_columns(
     original      => { default_value => \"now()" },
   },
   "vlan",
-  { data_type => "text", is_nullable => 1, default_value => '0' },
+  { data_type => "text", is_nullable => 0, default_value => '0' },
 );
 __PACKAGE__->set_primary_key("mac", "switch", "port", "vlan");
 
@@ -133,5 +135,13 @@ between the date stamp and time stamp. That is:
 =cut
 
 sub time_last_stamp  { return (shift)->get_column('time_last_stamp')  }
+
+=head2 net_mac
+
+Returns the C<mac> column instantiated into a L<Net::MAC> object.
+
+=cut
+
+sub net_mac { return Net::MAC->new(mac => (shift)->mac) }
 
 1;

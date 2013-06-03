@@ -35,7 +35,8 @@ sub worker_body {
           my ($status, $log);
           try {
               $job->started(scalar localtime);
-              info sprintf "int (%s): starting job %s at %s", $wid, $jid, $job->started;
+              info sprintf "int (%s): starting %s job(%s) at %s",
+                $wid, $target, $jid, $job->started;
               ($status, $log) = $self->$target($job);
           }
           catch {
@@ -55,12 +56,12 @@ sub worker_body {
 sub close_job {
   my ($self, $job, $status, $log) = @_;
   my $now = scalar localtime;
-  info sprintf "int (%s): wrapping up job %s - status %s at %s",
-    $self->wid, $job->job, $status, $now;
+  info sprintf "int (%s): wrapping up set_%s job(%s) - status %s at %s",
+    $self->wid, $job->action, $job->job, $status, $now;
 
   try {
       schema('netdisco')->resultset('Admin')
-        ->find($job->job)
+        ->find($job->job, {for => 'update'})
         ->update({
           status => $status,
           log => $log,
