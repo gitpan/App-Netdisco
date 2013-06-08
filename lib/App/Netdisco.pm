@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.007000_002';
+our $VERSION = '2.007000_003';
 
 BEGIN {
   if (not length ($ENV{DANCER_APPDIR} || '')
@@ -40,14 +40,6 @@ The content of this distribution is the next major version of the Netdisco
 network management tool. Pieces are still missing however, so if you're a new
 user please see L<http://netdisco.org/> for further information on the project
 and how to download the current official release.
-
-=over 4
-
-=item *
-
-See the demo at: L<http://demo-ollyg.dotcloud.com/netdisco/>
-
-=back
 
 L<App::Netdisco> provides a web frontend and a backend daemon to handle
 interactive requests such as changing port or device properties. There is not
@@ -183,9 +175,27 @@ or MAC addreses, VLAN numbers, and so on.
 When user authentication is disabled (C<no_auth>) the default username is
 "guest", which has no special privilege. To grant port and device control
 rights to this user, create a row in the C<users> table of the Netdisco
-database with a username of C<guest> and the C<port_control> flag set to true:
+database with a username of C<guest> and appropriate flags set to true:
 
- netdisco=> insert into users (username, port_control) values ('guest', true);
+ netdisco=> insert into users (username) values ('guest');
+ netdisco=> update users set port_control = true where username = 'guest';
+ netdisco=> update users set admin = true where username = 'guest';
+
+=head2 Command-Line Device and Port Actions
+
+To run a device (discover, etc) or port control job from the command-line, use
+the bundled L<netdisco-do> program. For example:
+
+ ~/bin/netdisco-do -D discover -d 192.0.2.1
+
+=head2 Import Topology
+
+Netdisco 1.x had support for a topology information file to fill in device
+port relations which could not be discovered. This is now stored in the
+database (and edited in the web interface). To import a legacy topology file,
+run:
+
+ ~/bin/localenv nd-import-topology /path/to/netdisco-topology.txt
 
 =head2 Deployment Scenarios
 
@@ -202,10 +212,8 @@ documentation for further information.
 
 =head2 Plugins
 
-App::Netdisco includes a Plugin subsystem for building the web user interface.
-Items in the navigation bar and the tabs on pages are loaded as Plugins, and
-you have control over their appearance and ordering. See
-L<App::Netdisco::Web::Plugin> for further information.
+Netdisco includes a Plugin subsystem for customizing the web user interface.
+See L<App::Netdisco::Web::Plugin> for further information.
 
 =head2 Developing
 
