@@ -1,4 +1,11 @@
-2.009000_001 - 
+2.010001_001
+
+  [BUG FIXES]
+
+   * Change data type on device_port remote_id to bytea
+   * Pass event param to all js functions which require it
+
+2.010000 - 2012-06-16
 
   [NEW FEATURES]
 

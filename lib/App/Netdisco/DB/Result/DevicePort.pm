@@ -52,7 +52,7 @@ __PACKAGE__->add_columns(
   "remote_type",
   { data_type => "text", is_nullable => 1 },
   "remote_id",
-  { data_type => "text", is_nullable => 1 },
+  { data_type => "bytea", is_nullable => 1 },
   "manual_topo",
   { data_type => "bool", is_nullable => 0, default_value => \"false" },
   "is_uplink",

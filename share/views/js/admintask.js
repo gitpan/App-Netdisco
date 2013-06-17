@@ -80,7 +80,7 @@
     });
 
     // job control refresh icon should reload the page
-    $('#nd_countdown-refresh').click(function() {
+    $('#nd_countdown-refresh').click(function(event) {
       event.preventDefault();
       for (var i = 0; i < nd_timers.length; i++) {
           clearTimeout(nd_timers[i]);
@@ -89,7 +89,7 @@
     });
 
     // job control pause/play icon switcheroo
-    $('#nd_countdown-control').click(function() {
+    $('#nd_countdown-control').click(function(event) {
       event.preventDefault();
       var icon = $('#nd_countdown-control-icon');
       icon.toggleClass('icon-pause icon-play text-error text-success');
@@ -107,7 +107,7 @@
 
     // activity for admin task tables
     // dynamically bind to all forms in the table
-    $(target).on('submit', 'form', function() {
+    $(target).on('submit', 'form', function(event) {
       // stop form from submitting normally
       event.preventDefault();
 
