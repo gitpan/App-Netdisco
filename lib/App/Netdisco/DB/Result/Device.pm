@@ -65,8 +65,6 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 1 },
   "snmp_comm",
   { data_type => "text", is_nullable => 1 },
-  "snmp_comm_rw",
-  { data_type => "text", is_nullable => 1 },
   "snmp_class",
   { data_type => "text", is_nullable => 1 },
   "vtp_domain",
@@ -179,6 +177,15 @@ __PACKAGE__->has_many(
     powered_ports => 'App::Netdisco::DB::Result::DevicePortPower',
     'ip', { join_type => 'RIGHT' }
 );
+
+=head2 community
+
+Returns the row from the community string table, if one exists.
+
+=cut
+
+__PACKAGE__->might_have(
+    community => 'App::Netdisco::DB::Result::Community', 'ip');
 
 =head1 ADDITIONAL COLUMNS
 
