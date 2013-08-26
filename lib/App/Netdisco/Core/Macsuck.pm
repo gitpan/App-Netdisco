@@ -39,7 +39,7 @@ without a neighbor.
 If the device has VLANs, C<do_macsuck> will walk each VALN to get the MAC
 addresses from there.
 
-It will also gather wireless client information if C<store_wireless_client>
+It will also gather wireless client information if C<store_wireless_clients>
 configuration setting is enabled.
 
 =cut
@@ -167,9 +167,9 @@ sub store_node {
     $new->search({vlan => [$vlan, 0, undef]})->first;
 
     # upgrade old schema
-    $new->search({vlan => [$vlan, 0, undef]})
-      ->update({vlan => $vlan});
+    $new->search({vlan => [0, undef]})->delete();
 
+    # new data
     $new->update_or_create({
       vlan => $vlan,
       active => \'true',
@@ -222,8 +222,32 @@ sub _get_vlan_list {
   foreach my $vlan (sort keys %vlans) {
       my $name = $vlan_names{$vlan} || '(unnamed)';
 
-      # FIXME: macsuck_no_vlan
-      # FIXME: macsuck_no_devicevlan
+      if (ref [] eq ref setting('macsuck_no_vlan')) {
+          my $ignore = setting('macsuck_no_vlan');
+
+          if ((scalar grep {$_ eq $vlan} @$ignore) or
+              (scalar grep {$_ eq $name} @$ignore)) {
+
+              debug sprintf
+                ' [%s] macsuck VLAN %s - skipped by macsuck_no_vlan config',
+                $device->ip, $vlan;
+              next;
+          }
+      }
+
+      if (ref [] eq ref setting('macsuck_no_devicevlan')) {
+          my $ignore = setting('macsuck_no_devicevlan');
+          my $ip = $device->ip;
+
+          if ((scalar grep {$_ eq "$ip:$vlan"} @$ignore) or
+              (scalar grep {$_ eq "$ip:$name"} @$ignore)) {
+
+              debug sprintf
+                ' [%s] macsuck VLAN %s - skipped by macsuck_no_devicevlan config',
+                $device->ip, $vlan;
+              next;
+          }
+      }
 
       if (setting('macsuck_no_unnamed') and $name eq '(unnamed)') {
           debug sprintf
@@ -378,7 +402,7 @@ clients.
 If the device doesn't support the 802.11 MIBs, then this will silently return.
 
 If the device does support the 802.11 MIBs but Netdisco's configuration
-does not permit polling (C<store_wireless_client> must be true) then a debug
+does not permit polling (C<store_wireless_clients> must be true) then a debug
 message is logged and the subroutine returns.
 
 Otherwise, client information is gathered and stored to the database.
@@ -395,7 +419,7 @@ sub store_wireless_client_info {
   my $cd11_txrate = $snmp->cd11_txrate;
   return unless $cd11_txrate and scalar keys %$cd11_txrate;
 
-  if (setting('store_wireless_client')) {
+  if (setting('store_wireless_clients')) {
       debug sprintf ' [%s] macsuck - gathering wireless client info',
         $device->ip;
   }

@@ -9,6 +9,7 @@ use base 'Exporter';
 our @EXPORT = ();
 our @EXPORT_OK = qw/
   get_device
+  check_no
   is_discoverable
   is_arpnipable
   is_macsuckable
@@ -52,8 +53,67 @@ sub get_device {
     ->search({alias => $ip})->first;
   $ip = $alias->ip if defined $alias;
 
-  return schema('netdisco')->resultset('Device')
+  return schema('netdisco')->resultset('Device')->with_times
     ->find_or_new({ip => $ip});
+}
+
+=head2 check_no( $ip, $setting_name )
+
+Given the IP address of a device, returns true if the configuration setting
+C<$setting_name> matches that device, else returns false.
+
+There are several options for what C<$setting_name> can contain:
+
+=over 4
+
+=item *
+
+Hostname, IP address, IP prefix
+
+=item *
+
+C<"model:regex"> - matched against the device model
+
+=item *
+
+C<"vendor:regex"> - matched against the device vendor
+
+=back
+
+To simply match all devices, use IP Prefix "C<0.0.0.0/0>". All regular
+expressions are anchored (that is, they must match the whole string).
+
+=cut
+
+sub check_no {
+  my ($ip, $setting_name) = @_;
+  my $device = get_device($ip) or return 0;
+  my $addr = NetAddr::IP::Lite->new($device->ip);
+
+  my $config = setting($setting_name) || [];
+  return 0 unless scalar @$config;
+
+  foreach my $item (@$config) {
+      if ($item =~ m/^(.*)\s*:\s*(.*)$/) {
+          my $prop  = $1;
+          my $match = $2;
+
+          # if not in storage, we can't do much with device properties
+          next unless $device->in_storage;
+
+          # lazy version of vendor: and model:
+          if ($device->can($prop) and defined $device->prop
+              and $device->prop =~ m/^$match$/) {
+              return 1;
+          }
+          next;
+      }
+
+      my $ip = NetAddr::IP::Lite->new($item) or next;
+      return 1 if $ip->contains($addr);
+  }
+
+  return 0;
 }
 
 =head2 is_discoverable( $ip, $device_type? )
@@ -71,34 +131,28 @@ Returns false if the host is not permitted to discover the target device.
 
 =cut
 
+sub _bail_msg { debug $_[0]; return 0; }
+
 sub is_discoverable {
   my ($ip, $remote_type) = @_;
   my $device = get_device($ip) or return 0;
 
   if ($remote_type) {
-      return 0 if
-        scalar grep {$remote_type =~ m/$_/}
+      return _bail_msg("is_discoverable: device matched discover_no_type")
+        if scalar grep {$remote_type =~ m/$_/}
                     @{setting('discover_no_type') || []};
   }
 
-  my $addr = NetAddr::IP::Lite->new($device->ip);
-  my $discover_no   = setting('discover_no') || [];
-  my $discover_only = setting('discover_only') || [];
+  return _bail_msg("is_discoverable: device matched discover_no")
+    if check_no($device, 'discover_no');
 
-  if (scalar @$discover_no) {
-      foreach my $item (@$discover_no) {
-          my $ip = NetAddr::IP::Lite->new($item) or return 0;
-          return 0 if $ip->contains($addr);
-      }
-  }
+  return _bail_msg("is_discoverable: device failed to match discover_only")
+    if check_no($device, 'discover_only');
 
-  if (scalar @$discover_only) {
-      my $okay = 0;
-      foreach my $item (@$discover_only) {
-          my $ip = NetAddr::IP::Lite->new($item) or return 0;
-          ++$okay if $ip->contains($addr);
-      }
-      return 0 if not $okay;
+  if ($device->since_last_discover and setting('discover_min_age')
+      and $device->since_last_discover < setting('discover_min_age')) {
+
+      return _bail_msg("is_discoverable: time since last discover less than discover_min_age");
   }
 
   return 1;
@@ -120,24 +174,16 @@ sub is_arpnipable {
   my $ip = shift;
   my $device = get_device($ip) or return 0;
 
-  my $addr = NetAddr::IP::Lite->new($device->ip);
-  my $arpnip_no   = setting('arpnip_no') || [];
-  my $arpnip_only = setting('arpnip_only') || [];
+  return _bail_msg("is_arpnipable: device matched arpnip_no")
+    if check_no($device, 'arpnip_no');
 
-  if (scalar @$arpnip_no) {
-      foreach my $item (@$arpnip_no) {
-          my $ip = NetAddr::IP::Lite->new($item) or return 0;
-          return 0 if $ip->contains($addr);
-      }
-  }
+  return _bail_msg("is_arpnipable: device failed to match arpnip_only")
+    if check_no($device, 'arpnip_only');
 
-  if (scalar @$arpnip_only) {
-      my $okay = 0;
-      foreach my $item (@$arpnip_only) {
-          my $ip = NetAddr::IP::Lite->new($item) or return 0;
-          ++$okay if $ip->contains($addr);
-      }
-      return 0 if not $okay;
+  if ($device->since_last_arpnip and setting('arpnip_min_age')
+      and $device->since_last_arpnip < setting('arpnip_min_age')) {
+
+      return _bail_msg("is_arpnipable: time since last arpnip less than arpnip_min_age");
   }
 
   return 1;
@@ -159,24 +205,16 @@ sub is_macsuckable {
   my $ip = shift;
   my $device = get_device($ip) or return 0;
 
-  my $addr = NetAddr::IP::Lite->new($device->ip);
-  my $macsuck_no   = setting('macsuck_no') || [];
-  my $macsuck_only = setting('macsuck_only') || [];
+  return _bail_msg("is_macsuckable: device matched macsuck_no")
+    if check_no($device, 'macsuck_no');
 
-  if (scalar @$macsuck_no) {
-      foreach my $item (@$macsuck_no) {
-          my $ip = NetAddr::IP::Lite->new($item) or return 0;
-          return 0 if $ip->contains($addr);
-      }
-  }
+  return _bail_msg("is_macsuckable: device failed to match macsuck_only")
+    if check_no($device, 'macsuck_only');
 
-  if (scalar @$macsuck_only) {
-      my $okay = 0;
-      foreach my $item (@$macsuck_only) {
-          my $ip = NetAddr::IP::Lite->new($item) or return 0;
-          ++$okay if $ip->contains($addr);
-      }
-      return 0 if not $okay;
+  if ($device->since_last_macsuck and setting('macsuck_min_age')
+      and $device->since_last_macsuck < setting('macsuck_min_age')) {
+
+      return _bail_msg("is_macsuckable: time since last macsuck less than macsuck_min_age");
   }
 
   return 1;

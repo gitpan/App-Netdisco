@@ -258,6 +258,40 @@ Value: List of Strings. Default: C<private>.
 A list of read-write SNMP community strings to try on each device. The working
 community will be cached in the database.
 
+=head3 C<bulkwalk_off>
+
+Value: Boolean. Default C<false>.
+
+Set to C<true> to use C<GETNEXT> instead of the standard C<BULKWALK> for every
+device. This will slow things down, but might be necessary for problem
+devices. For more fine-grained control see the C<bulkwalk_no> setting.
+
+=head3 C<bulkwalk_no>
+
+Value: List of Network Identifiers or Device Properties. Default: Empty List.
+
+IP addresses in the list will use C<GETNEXT> (and not C<BULKWALK>). You can
+include hostnames, IP addresses and subnets (IPv4 or IPv6) in the list.
+
+Alternatively include a "C<property:regex>" entry to match the named property
+of the device. The regex must match the complete value.
+
+=head3 C<bulkwalk_repeaters>
+
+Value: Numnber. Default: 20.
+
+Sets the Net-SNMP C<MaxRepeaters> value, which is used on C<BULKWALK>
+operations. See L<SNMP> for more info.
+
+=head3 C<nonincreasing>
+
+Value: Boolean. Default: C<false>.
+
+Setting this to C<true> will allow the bulkwalk of devices that have tables
+with non-increasing OIDs. The default is to not allow this behavior, to
+prevent discovery on problem devices from looping indefinitely. Requires
+Net-SNMP 5.3 or higher.
+
 =head3 C<snmpver>
 
 Value: C<1|2|3>. Default: 2.
@@ -279,18 +313,24 @@ Number of times to retry connecting to a device before giving up.
 
 =head3 C<discover_no>
 
-Value: List of Network Identifiers. Default: Empty List.
+Value: List of Network Identifiers or Device Properties. Default: Empty List.
 
 IP addresses in the list will not be visited during device discovery. You can
 include hostnames, IP addresses and subnets (IPv4 or IPv6) in the list.
 
+Alternatively include a "C<property:regex>" entry to match the named property
+of the device. The regex must match the complete value.
+
 =head3 C<discover_only>
 
-Value: List of Network Identifiers. Default: Empty List.
+Value: List of Network Identifiers or Device Properties. Default: Empty List.
 
 If present, device discovery will be limited to IP addresses matching entries
 in this list. You can include hostnames, IP addresses and subnets (IPv4 and
 IPv6).
+
+Alternatively include a "C<property:regex>" entry to match the named property
+of the device. The regex must match the complete value.
 
 =head3 C<discover_no_type>
 
@@ -304,6 +344,33 @@ but don't talk SNMP. For example:
  discover_no_type:
    - 'cisco\s+AIR-LAP'
    - '(?i)Cisco\s+IP\s+Phone'
+
+=head3 C<discover_min_age>
+
+Value: Number. Default: 0.
+
+Sets the minimum amount of time in seconds which must elapse between any two
+discover jobs for a device.
+
+=head3 C<macsuck_no>
+
+Value: List of Network Identifiers or Device Properties. Default: Empty List.
+
+IP addresses in the list will not be visited for macsuck. You can include
+hostnames, IP addresses and subnets (IPv4 or IPv6) in the list.
+
+Alternatively include a "C<property:regex>" entry to match the named property
+of the device. The regex must match the complete value.
+
+=head3 C<macsuck_only>
+
+Value: List of Network Identifiers or Device Properties. Default: Empty List.
+
+If present, macsuck will be limited to IP addresses matching entries in this
+list. You can include hostnames, IP addresses and subnets (IPv4 and IPv6).
+
+Alternatively include a "C<property:regex>" entry to match the named property
+of the device. The regex must match the complete value.
 
 =head3 C<macsuck_all_vlans>
 
@@ -321,6 +388,20 @@ Set to true to skip macsuck-ing on VLANs which have no name set. This option
 may be useful on Cisco Catalyst family devices where ports are a member of a
 VLAN which is not defined in the VLAN database.
 
+=head3 C<macsuck_no_vlan>
+
+Value: List of VLAN names or numbers. Default: Empty List.
+
+On some devices, per-VLAN macsuck will timeout with specific VLAN numbers. You
+can put those numbers (or their names) into this list to have them skipped.
+
+=head3 C<macsucl_no_devicevlan>
+
+Value: List of "IP:vlan-number" or "IP:vlan-name". Default: Empty List.
+
+Similar to C<macsuck_no_vlan>, but allows specifying the device root
+(canonical) IP, in order to restrict VLAN skipping only to some devices.
+
 =head3 C<macsuck_bleed>
 
 Value: Boolean. Default: C<false>.
@@ -329,13 +410,54 @@ Set to true will let nodes accumulate on uplink ports without topology
 information. This is a debug option to help you figure out your topology and
 generally should not be set.
 
-=head3 C<store_wireless_client>
+=head3 C<macsuck_min_age>
+
+Value: Number. Default: 0.
+
+Sets the minimum amount of time in seconds which must elapse between any two
+macsuck jobs for a device.
+
+=head3 C<arpnip_no>
+
+Value: List of Network Identifiers or Device Properties. Default: Empty List.
+
+IP addresses in the list will not be visited for arpnip. You can include
+hostnames, IP addresses and subnets (IPv4 or IPv6) in the list.
+
+Alternatively include a "C<property:regex>" entry to match the named property
+of the device. The regex must match the complete value.
+
+=head3 C<arpnip_only>
+
+Value: List of Network Identifiers or Device Properties. Default: Empty List.
+
+If present, arpnip will be limited to IP addresses matching entries in this
+list. You can include hostnames, IP addresses and subnets (IPv4 and IPv6).
+
+Alternatively include a "C<property:regex>" entry to match the named property
+of the device. The regex must match the complete value.
+
+=head3 C<arpnip_min_age>
+
+Value: Number. Default: 0.
+
+Sets the minimum amount of time in seconds which must elapse between any two
+arpnip jobs for a device.
+
+=head3 C<store_wireless_clients>
 
 Value: Boolean. Default: C<true>.
 
 Set to false to skip the wireless client information gathering. This is
 captured at macsuck time, so if you aren't using the information you can skip
 it.
+
+=head3 C<store_modules>
+
+Value: Boolean. Default: C<true>.
+
+Set to false to skip the module inventory on device discovery. On some
+platforms this can double the discovery time.
 
 =head3 C<ignore_interfaces>
 
@@ -425,7 +547,7 @@ Value: Settings Tree. Default:
 
  workers:
    interactives: 2
-   pollers: 2
+   pollers: 5
    sleep_time: 2
 
 Control the activity of the backend daemon with this configuration setting.
@@ -540,6 +662,12 @@ Value: String. Default: C<Netdisco>.
 
 Don't touch this.
 
+=head3 C<behind_proxy>
+
+Value: Boolean. Default: C<false>.
+
+There's no need to touch this. See deployment documentation for how to proxy.
+
 =head1 UNSUPPORTED (SO FAR)
 
 These settings are from Netdisco 1.x but are yet to be supported in Netdisco
@@ -549,39 +677,7 @@ These settings are from Netdisco 1.x but are yet to be supported in Netdisco
 
 =item *
 
-C<admin>
-
-=item *
-
-C<arpnip_min_age>
-
-=item *
-
-C<arpnip_no>
-
-=item *
-
-C<arpnip_only>
-
-=item *
-
-C<bulkwalk_no>
-
-=item *
-
-C<bulkwalk_off>
-
-=item *
-
-C<bulkwalk_repeaters>
-
-=item *
-
 C<col_xxx_show>
-
-=item *
-
-C<discover_min_age>
 
 =item *
 
@@ -601,31 +697,7 @@ C<get_community>
 
 =item *
 
-C<macsuck_min_age>
-
-=item *
-
-C<macsuck_no>
-
-=item *
-
-C<macsuck_no_devicevlan>
-
-=item *
-
-C<macsuck_no_vlan>
-
-=item *
-
-C<macsuck_only>
-
-=item *
-
 C<macsuck_timeout>
-
-=item *
-
-C<nonincreasing>
 
 =item *
 
@@ -634,10 +706,6 @@ C<port_info>
 =item *
 
 C<portctl_timeout>
-
-=item *
-
-C<portcontrol>
 
 =item *
 
@@ -650,10 +718,6 @@ C<snmpforce_v2>
 =item *
 
 C<snmpforce_v3>
-
-=item *
-
-C<store_modules>
 
 =item *
 
@@ -670,14 +734,6 @@ C<v3_users>
 =item *
 
 C<v3_users_rw>
-
-=item *
-
-C<web_console_models>
-
-=item *
-
-C<web_console_vendors>
 
 =back
 
