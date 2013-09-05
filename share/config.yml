@@ -34,6 +34,7 @@ path: '/'
 web_plugins:
   - Inventory
   - Report::PortUtilization
+  - Report::HalfDuplex
   - Report::DuplexMismatch
   - AdminTask::PseudoDevice
   - AdminTask::Topology
@@ -45,7 +46,7 @@ web_plugins:
   - Search::Port
   - Device::Details
   - Device::Ports
-  # - Device::Modules
+  - Device::Modules
   - Device::Neighbors
   - Device::Addresses
 web_plugins_extra: []

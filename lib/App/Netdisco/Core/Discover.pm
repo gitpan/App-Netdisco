@@ -130,7 +130,15 @@ sub _set_canonical_ip {
             my $gone = $device->device_ips->delete;
             debug sprintf ' [%s] device - removed %s aliases',
               $oldip, $gone;
-            $device->delete;
+
+            # our special delete which is more efficient
+            schema('netdisco')->resultset('Device')
+              ->search({ ip => $device->ip })->delete;
+
+            # a new row object from the old one
+            $device = schema('netdisco')->resultset('Device')
+              ->new({ $device->get_columns });
+
             debug sprintf ' [%s] device - deleted self', $oldip;
           });
 
@@ -543,10 +551,10 @@ sub store_modules {
           name   => $e_name->{$entry},
           class  => $e_class->{$entry},
           pos    => $e_pos->{$entry},
-          hw_ver => $e_hwver->{$entry},
-          fw_ver => $e_fwver->{$entry},
-          sw_ver => $e_swver->{$entry},
-          model  => $e_model->{$entry},
+          hw_ver => Encode::decode('UTF-8', $e_hwver->{$entry}),
+          fw_ver => Encode::decode('UTF-8', $e_fwver->{$entry}),
+          sw_ver => Encode::decode('UTF-8', $e_swver->{$entry}),
+          model  => Encode::decode('UTF-8', $e_model->{$entry}),
           serial => $e_serial->{$entry},
           fru    => $e_fru->{$entry},
           description => $e_descr->{$entry},
