@@ -104,23 +104,19 @@
         ,url: uri_base + '/ajax/control/admin/' + mode
         ,data: tr.find('input[data-form="' + mode + '"],textarea[data-form="' + mode + '"]').serializeArray()
         ,success: function() {
-          toastr.info('Requested '+ mode +' for device '+ tr.data('for-device'));
+          if (mode != 'delete') {
+            toastr.info('Requested '+ mode +' for device '+ tr.data('for-device'));
+          }
+          else {
+            toastr.success('Deleted device '+ tr.data('for-device'));
+          }
         }
         // skip any error reporting for now
         // TODO: fix sanity_ok in Netdisco Web
         ,error: function() {
-          toastr.error('Failed to '+ mode +' for device '+ tr.data('for-device'));
+          toastr.error('Failed to '+ mode +' device '+ tr.data('for-device'));
         }
       });
-    });
-
-    // bootstrap modal mucks about with mouse actions on higher elements
-    // so need to bury and raise it when needed
-    $('#ports_pane').on('show', '.nd_modal', function () {
-      $(this).toggleClass('nd_deep-horizon');
-    });
-    $('#ports_pane').on('hidden', '.nd_modal', function () {
-      $(this).toggleClass('nd_deep-horizon');
     });
 
     // clear any values in the delete confirm dialog

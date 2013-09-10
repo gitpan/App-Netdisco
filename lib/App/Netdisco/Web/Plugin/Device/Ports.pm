@@ -31,9 +31,16 @@ ajax '/ajax/content/device/ports' => require_login sub {
             return unless $set->count;
         }
         else {
-            $f =~ s/\*/%/g if index($f, '*') >= 0;
-            $f =~ s/\?/_/g if index($f, '?') >= 0;
-            $f = { '-ilike' => $f };
+            if (param('partial')) {
+                # change wildcard chars to SQL
+                $f =~ s/\*/%/g;
+                $f =~ s/\?/_/g;
+                # set wilcards at param boundaries
+                $f =~ s/^\%*/%/;
+                $f =~ s/\%*$/%/;
+                # enable ILIKE op
+                $f = { '-ilike' => $f };
+            }
 
             if ($set->search({'me.port' => $f})->count) {
                 $set = $set->search({'me.port' => $f});
@@ -45,12 +52,37 @@ ajax '/ajax/content/device/ports' => require_login sub {
         }
     }
 
-    # filter for free ports if asked
-    my $free_filter = (param('free') ? 'only_free_ports' : 'with_is_free');
-    $set = $set->$free_filter({
-      age_num => (param('age_num') || 3),
-      age_unit => (param('age_unit') || 'months')
-    });
+    # filter for port status if asked
+    my %port_state = map {$_ => 1} (param('port_state') || ());
+
+    if (exists $port_state{free}) {
+        if (scalar keys %port_state == 1) {
+            $set = $set->only_free_ports({
+              age_num => (param('age_num') || 3),
+              age_unit => (param('age_unit') || 'months')
+            });
+        }
+        else {
+            $set = $set->with_is_free({
+              age_num => (param('age_num') || 3),
+              age_unit => (param('age_unit') || 'months')
+            });
+        }
+        delete $port_state{free};
+    }
+
+    if (scalar keys %port_state < 3) {
+        my @combi = ();
+
+        push @combi, {'me.up' => 'up'}
+          if exists $port_state{up};
+        push @combi, {'me.up_admin' => 'up', 'me.up' => { '!=' => 'up'}}
+          if exists $port_state{down};
+        push @combi, {'me.up_admin' => { '!=' => 'up'}}
+          if exists $port_state{shut};
+
+        $set = $set->search({-or => \@combi});
+    }
 
     # make sure query asks for formatted timestamps when needed
     $set = $set->with_times if param('c_lastchange');
@@ -65,9 +97,9 @@ ajax '/ajax/content/device/ports' => require_login sub {
 
     # what kind of nodes are we interested in?
     my $nodes_name = (param('n_archived') ? 'nodes' : 'active_nodes');
+    $nodes_name .= '_with_age' if param('c_nodes') and param('n_age');
     $set = $set->search_rs({}, { order_by => ["${nodes_name}.mac", "ips.ip"] })
       if param('c_nodes');
-    $nodes_name .= '_with_age' if param('c_nodes') and param('n_age');
 
     # retrieve active/all connected nodes, if asked for
     $set = $set->search_rs({}, { prefetch => [{$nodes_name => 'ips'}] })
