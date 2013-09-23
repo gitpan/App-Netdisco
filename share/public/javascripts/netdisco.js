@@ -39,7 +39,7 @@ function do_search (event, tab) {
         );
         return;
       }
-      if (response === "") {
+      if (response == "") {
         $(target).html(
           '<div class="span2 alert alert-info">No matching records.</div>'
         );
@@ -82,6 +82,14 @@ function update_content(from, to) {
     var pgtitle = $('#nd_device-name').text() +' - '+ $('#'+ to + '_link').text();
   }
 
+  // navbar text decoration special case
+  if (to != 'device') {
+    $('#nq').css('text-decoration', 'none');
+  }
+  else {
+    form_inputs.each(function() {device_form_state($(this))});
+  }
+
   if (window.History && window.History.enabled && is_from_state_event == 0) {
     is_from_history_plugin = 1;
     window.History.pushState(
@@ -111,30 +119,39 @@ if (window.History && window.History.enabled) {
 
 // if any field in Search Options has content, highlight in green
 function device_form_state(e) {
-  if (e.prop('value') != "") {
-    e.parent(".clearfix").addClass('success');
+  var with_val = $.grep(form_inputs,
+                        function(n,i) {return($(n).prop('value') != "")}).length;
+  var with_text = $.grep(form_inputs.not('select'),
+                          function(n,i) {return($(n).val() != "")}).length;
 
-    if (e.parents('#device_form').length) {
-      $('#nq').css('text-decoration', 'line-through');
-
-      if (e.attr('type') == 'text') {
-        $('.nd_field-copy-icon').hide();
-      }
-    }
-
-    var id = '#' + e.attr('name') + '_clear_btn';
-    $(id).show();
-  }
-  else {
+  if (e.prop('value') == "") {
     e.parent(".clearfix").removeClass('success');
     var id = '#' + e.attr('name') + '_clear_btn';
     $(id).hide();
 
-    var num_empty = $.grep(form_inputs,
-                           function(n,i) {return($(n).val() != "")}).length;
-    if (num_empty === 3) {
+    // if form has no field val, clear strikethough
+    if (with_val == 0) {
       $('#nq').css('text-decoration', 'none');
+    }
+
+    // for text inputs only, extra formatting
+    if (with_text == 0) {
       $('.nd_field-copy-icon').show();
+    }
+  }
+  else {
+    e.parent(".clearfix").addClass('success');
+    var id = '#' + e.attr('name') + '_clear_btn';
+    $(id).show();
+
+    // if form still has any field val, set strikethough
+    if (e.parents('form[action="/search"]').length > 0 && with_val != 0) {
+      $('#nq').css('text-decoration', 'line-through');
+    }
+
+    // if we're text, hide copy icon when we get a val
+    if (e.attr('type') == 'text') {
+      $('.nd_field-copy-icon').hide();
     }
   }
 }

@@ -37,7 +37,7 @@ function port_control (e) {
         td.data('action', 'up');
       }
       else if ($.trim(td.data('action')) == 'up') {
-        td.prev('td').html('<i class="icon-refresh"></i>');
+        td.prev('td').html('<i class="icon-refresh icon-spin"></i>');
         $(e).toggleClass('icon-hand-up');
         $(e).toggleClass('icon-hand-down');
         $(e).data('tooltip').options.title = 'Click to Disable';
@@ -66,7 +66,7 @@ function port_control (e) {
 // on load, establish global delegations for now and future
 $(document).ready(function() {
   // for growl-like functionality, check for notifications periodically
-  if (nd_port_control) {
+  if (nd_check_userlog) {
     (function worker() {
       $.ajax({
         url: uri_base + '/ajax/userlog'

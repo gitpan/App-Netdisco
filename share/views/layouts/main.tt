@@ -26,7 +26,7 @@
 
   <script type="text/javascript">
     var uri_base = '[% uri_base %]';
-    var nd_port_control = '[% NOT settings.no_port_control %]';
+    var nd_check_userlog = '[% settings.check_userlog %]';
   </script>
   <script type="text/javascript" src="[% uri_base %]/javascripts/netdisco.js"></script>
 
@@ -88,7 +88,8 @@
         <input placeholder="Find Anything" class="search-query span3"
           id="nq" name="q" type="text" autocomplete="off"/>
         <span style="font-size: 24px;">
-        <i id="navsearchgo" class="icon-search nd_navbar-icon"></i>
+          <i id="navsearchgo" class="icon-search nd_navbar-icon"
+            rel="tooltip" data-placement="bottom" data-offset="5" data-title="New Search" data-container="body"></i>
         </span>
       </form>
       [% IF user_has_role('admin') %]
@@ -132,12 +133,13 @@
           [% ELSE %]
             <i class="icon-user"></i>
           [% END %]&nbsp;
-            [% session.logged_in_user | html_entity %] <b class="caret"></b></a>
-            <ul class="dropdown-menu">
+            [% session.logged_in_user | html_entity %] <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a href="[% uri_for('/about') %]">About</a></li>
           [% IF NOT settings.no_auth %]
-              <li><a href="[% uri_for('/logout') %]">Log Out</a></li>
+            <li><a href="[% uri_for('/logout') %]">Log Out</a></li>
           [% END %]
-              <li><a href="[% uri_for('/about') %]">About</a></li>
           </ul>
         </li> <!-- /dropdown -->
       </ul>

@@ -1,7 +1,6 @@
 package App::Netdisco::Web::Plugin::Report::ApRadioChannelPower;
 
 use Dancer ':syntax';
-use Dancer::Plugin::Ajax;
 use Dancer::Plugin::DBIC;
 use Dancer::Plugin::Auth::Extensible;
 
@@ -11,6 +10,7 @@ register_report(
     {   category => 'Wireless',
         tag      => 'apradiochannelpower',
         label    => 'Access Point Radios Channel and Power',
+        provides_csv => 1,
     }
 );
 
@@ -47,16 +47,22 @@ sub port_tree {
     return \%ports;
 }
 
-ajax '/ajax/content/report/apradiochannelpower' => require_login sub {
+get '/ajax/content/report/apradiochannelpower' => require_login sub {
     my @set
         = schema('netdisco')->resultset('Virtual::ApRadioChannelPower')->all;
 
     my $results = port_tree( \@set );
     return unless scalar %$results;
 
-    content_type('text/html');
+    if (request->is_ajax) {
     template 'ajax/report/apradiochannelpower.tt', { results => $results, },
         { layout => undef };
+    }
+    else {
+        header( 'Content-Type' => 'text/comma-separated-values' );
+        template 'ajax/report/apradiochannelpower_csv.tt', { results => $results, },
+            { layout => undef };
+    }
 };
 
 true;

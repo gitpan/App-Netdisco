@@ -4,9 +4,9 @@
   <div class="nd_sidebar nd_sidebar-pinned">
     <div class="well">
       <i class="nd_sidebar-toggle icon-signout" id="nd_sidebar-toggle-img-in"
-        rel="tooltip" data-placement="left" data-offset="5" data-title="Hide Sidebar"></i>
+        rel="tooltip" data-placement="left" data-offset="5" data-title="Hide Sidebar" data-container="body"></i>
       <i class="nd_sidebar-pin icon-pushpin nd_sidebar-pin-clicked"
-        rel="tooltip" data-placement="left" data-offset="5" data-title="Unpin Sidebar"></i>
+        rel="tooltip" data-placement="left" data-offset="5" data-title="Unpin Sidebar" data-container="body"></i>
 
       <div class="tab-content">
         <div id="[% task.tag %]_search" class="tab-pane active">
@@ -35,6 +35,12 @@
         <a id="nd_countdown-control" href="#">
           <i id="nd_countdown-control-icon" class="text-success icon-play"></i></a>
         <span id="nd_countdown"></span>
+      </span>
+      [% ELSIF task.provides_csv %]
+      <span id="nd_device-name">
+        <a id="nd_csv-download" href="#" download="netdisco.csv">
+          <i id="nd_csv-download-icon" class="text-info icon-file-text-alt icon-large"
+            rel="tooltip" data-placement="left" data-offset="5" data-title="Download as CSV"></i></a>
       </span>
       [% END %]
     </ul>
