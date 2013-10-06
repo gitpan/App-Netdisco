@@ -190,11 +190,8 @@ sub store_interfaces {
   # clear the cached uptime and get a new one
   my $dev_uptime = $snmp->load_uptime;
 
-  if (scalar grep {$_ > $dev_uptime} values %$i_lastchange) {
-      info sprintf ' [%s] interfaces - device uptime has wrapped - correcting',
-        $device->ip;
-      $device->uptime( $dev_uptime + 2**32 );
-  }
+  # used to track whether we've wrapped the device uptime
+  my $dev_uptime_wrapped = 0;
 
   # build device interfaces suitable for DBIC
   my %interfaces;
@@ -220,7 +217,14 @@ sub store_interfaces {
           next;
       }
 
-      my $lc = $i_lastchange->{$entry};
+      my $lc = $i_lastchange->{$entry} || 0;
+      if (not $dev_uptime_wrapped and $lc > $dev_uptime) {
+          info sprintf ' [%s] interfaces - device uptime wrapped (%s) - correcting',
+            $device->ip, $port;
+          $device->uptime( $dev_uptime + 2**32 );
+          $dev_uptime_wrapped = 1;
+      }
+
       if ($device->is_column_changed('uptime') and $lc) {
           if ($lc < $dev_uptime) {
               # ambiguous: lastchange could be sysUptime before or after wrap

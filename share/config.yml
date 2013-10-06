@@ -37,7 +37,10 @@ web_plugins:
   - Report::ApChannelDist
   - Report::ApRadioChannelPower
   - Report::HalfDuplex
+  - Report::DeviceByLocation
   - Report::DuplexMismatch
+  - Report::SsidInventory
+  - Report::VlanInventory
   - AdminTask::PseudoDevice
   - AdminTask::Topology
   - AdminTask::JobQueue
