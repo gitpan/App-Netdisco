@@ -5,6 +5,7 @@ license  'bsd';
 all_from 'lib/App/Netdisco.pm';
  
 requires 'Algorithm::Cron' => 0.07;
+requires 'AnyEvent' => 7.05;
 requires 'App::cpanminus' => 1.6108;
 requires 'App::local::lib::helper' => 0.07;
 requires 'DBD::Pg' => 0;
@@ -14,8 +15,9 @@ requires 'DBIx::Class::Helpers' => 2.018004;
 requires 'Daemon::Control' => 0.001000;
 requires 'Dancer' => 1.3112;
 requires 'Dancer::Plugin::DBIC' => 0.1803;
-requires 'Dancer::Plugin::Auth::Extensible' => 0.20;
+requires 'Dancer::Plugin::Auth::Extensible' => 0.30;
 requires 'File::ShareDir' => 1.03;
+requires 'Guard' => 1.022;
 requires 'HTML::Parser' => 3.70;
 requires 'HTTP::Tiny' => 0.029;
 requires 'JSON' => 0;

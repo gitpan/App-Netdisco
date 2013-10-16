@@ -86,8 +86,6 @@ macsuck_min_age: 0
 arpnip_no: []
 arpnip_only: []
 arpnip_min_age: 0
-nodenames_no: []
-nodenames_only: []
 store_wireless_clients: true
 store_modules: true
 ignore_interfaces:
@@ -123,6 +121,9 @@ workers:
   pollers: 5
   sleep_time: 2
 
+dns:
+  max_outstanding: 250
+
 #housekeeping:
 #  discoverall:
 #    when: '0 9 * * *'
@@ -152,6 +153,7 @@ engines:
 layout: 'main'
 plugins:
   Auth::Extensible:
+    no_api_change_warning: true
     no_default_pages: true
     realms:
       users:
