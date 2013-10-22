@@ -151,7 +151,7 @@ sub store_device {
   }
 
   my @properties = qw/
-    snmp_ver snmp_comm
+    snmp_ver
     description uptime contact name location
     layers ports mac serial model
     ps1_type ps2_type ps1_status ps2_status
@@ -282,7 +282,7 @@ sub store_interfaces {
       };
   }
 
-  schema('netdisco')->txn_do(sub {
+  schema('netdisco')->resultset('DevicePort')->txn_do_locked(sub {
     my $gone = $device->ports->delete({keep_nodes => 1});
     debug sprintf ' [%s] interfaces - removed %s interfaces',
       $device->ip, $gone;
@@ -572,16 +572,16 @@ sub store_modules {
           index  => $e_index->{$entry},
           type   => $e_type->{$entry},
           parent => $e_parent->{$entry},
-          name   => $e_name->{$entry},
+          name   => Encode::decode('UTF-8', $e_name->{$entry}),
           class  => $e_class->{$entry},
           pos    => $e_pos->{$entry},
           hw_ver => Encode::decode('UTF-8', $e_hwver->{$entry}),
           fw_ver => Encode::decode('UTF-8', $e_fwver->{$entry}),
           sw_ver => Encode::decode('UTF-8', $e_swver->{$entry}),
           model  => Encode::decode('UTF-8', $e_model->{$entry}),
-          serial => $e_serial->{$entry},
+          serial => Encode::decode('UTF-8', $e_serial->{$entry}),
           fru    => $e_fru->{$entry},
-          description => $e_descr->{$entry},
+          description => Encode::decode('UTF-8', $e_descr->{$entry}),
           last_discover => \'now()',
       };
   }

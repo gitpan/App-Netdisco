@@ -64,17 +64,19 @@ sub do_macsuck {
   store_wireless_client_info($device, $snmp, $now);
 
   # cache the device ports to save hitting the database for many single rows
-  my $device_ports = {map {($_->port => $_)} $device->ports->all}; 
+  my $device_ports = {map {($_->port => $_)}
+                          $device->ports(undef, {prefetch => 'neighbor_alias'})->all};
   my $port_macs = get_port_macs($device);
+  my $interfaces = $snmp->interfaces;
 
   # get forwarding table data via basic snmp connection
-  my $fwtable = { 0 => _walk_fwtable($device, $snmp, $port_macs, $device_ports) };
+  my $fwtable = { 0 => _walk_fwtable($device, $snmp, $interfaces, $port_macs, $device_ports) };
 
   # ...then per-vlan if supported
   my @vlan_list = _get_vlan_list($device, $snmp);
   foreach my $vlan (@vlan_list) {
-      snmp_comm_reindex($snmp, $vlan);
-      $fwtable->{$vlan} = _walk_fwtable($device, $snmp, $port_macs, $device_ports);
+      snmp_comm_reindex($snmp, $device, $vlan);
+      $fwtable->{$vlan} = _walk_fwtable($device, $snmp, $interfaces, $port_macs, $device_ports);
   }
 
   # now it's time to call store_node for every node discovered
@@ -94,6 +96,9 @@ sub do_macsuck {
             $device->ip, $port, $vlan, scalar keys %{ $fwtable->{$vlan}->{$port} };
 
           foreach my $mac (keys %{ $fwtable->{$vlan}->{$port} }) {
+              # make sure this port is UP in netdisco
+              $device_ports->{$port}->update({up_admin => 'up', up => 'up'});
+
               # get VLAN from Q-BRIDGE if available
               $vlan = $fwtable->{$vlan}->{$port}->{$mac}
                 if $vlan == 0;
@@ -129,6 +134,7 @@ field of the database record. If not provided, it defauls to C<now()>.
 sub store_node {
   my ($ip, $vlan, $port, $mac, $now) = @_;
   $now ||= 'now()';
+  $vlan ||= 0;
 
   schema('netdisco')->txn_do(sub {
     my $nodes = schema('netdisco')->resultset('Node');
@@ -157,13 +163,13 @@ sub store_node {
     my $new = $nodes->search({
       'me.switch' => $ip,
       'me.port' => $port,
+      'me.vlan' => $vlan,
       'me.mac' => $mac,
     });
 
     # new data
     $new->update_or_create(
       {
-        vlan => $vlan,
         active => \'true',
         oui => substr($mac,0,8),
         time_last => \$now,
@@ -187,13 +193,26 @@ sub _get_vlan_list {
 
   my (%vlans, %vlan_names);
   my $i_vlan = $snmp->i_vlan || {};
+  my $trunks = $snmp->i_vlan_membership || {};
+  my $i_type = $snmp->i_type || {};
 
   # get list of vlans in use
   while (my ($idx, $vlan) = each %$i_vlan) {
       # hack: if vlan id comes as 1.142 instead of 142
       $vlan =~ s/^\d+\.//;
-
-      ++$vlans{$vlan};
+      
+      # VLANs are ports interfaces capture VLAN, but don't count as in use
+      # Port channels are also 'propVirtual', but capture while checking
+      # trunk VLANs below
+      if (exists $i_type->{$idx} and $i_type->{$idx} eq 'propVirtual') {
+        $vlans{$vlan} ||= 0;
+      }
+      else {
+        ++$vlans{$vlan};
+      }
+      foreach my $t_vlan (@{$trunks->{$idx}}) {
+        ++$vlans{$t_vlan};
+      }
   }
 
   unless (scalar keys %vlans) {
@@ -209,7 +228,8 @@ sub _get_vlan_list {
       (my $vlan = $idx) =~ s/^\d+\.//;
 
       # just in case i_vlan is different to v_name set
-      ++$vlans{$vlan};
+      # capture the VLAN, but it's not in use on a port
+      $vlans{$vlan} ||= 0;
 
       $vlan_names{$vlan} = $name;
   }
@@ -262,8 +282,7 @@ sub _get_vlan_list {
       }
 
       # check in use by a port on this device
-      if (scalar keys %$i_vlan and not exists $vlans{$vlan}
-            and not setting('macsuck_all_vlans')) {
+      if (!$vlans{$vlan} && !setting('macsuck_all_vlans')) {
 
           debug sprintf
             ' [%s] macsuck VLAN %s/%s - not in use by any port - skipping.',
@@ -280,14 +299,13 @@ sub _get_vlan_list {
 # walks the forwarding table (BRIDGE-MIB) for the device and returns a
 # table of node entries.
 sub _walk_fwtable {
-  my ($device, $snmp, $port_macs, $device_ports) = @_;
+  my ($device, $snmp, $interfaces, $port_macs, $device_ports) = @_;
   my $cache = {};
 
   my $fw_mac   = $snmp->fw_mac;
   my $fw_port  = $snmp->fw_port;
   my $fw_vlan  = $snmp->qb_fw_vlan;
   my $bp_index = $snmp->bp_index;
-  my $interfaces = $snmp->interfaces;
 
   # to map forwarding table port to device port we have
   #   fw_port -> bp_index -> interfaces

@@ -1,5 +1,10 @@
 2.018001 - 
 
+  [ENHANCEMENTS]
+
+  * Ports with active nodes are set to be "up" immediately (closes #9)
+  * Avoid returning to the DB for every MAC on a neighbor port
+
   [BUG FIXES]
 
   * Update Print media CSS to handle new UI components
@@ -7,6 +12,11 @@
   * Set canonical IP failed on synthesized cols (and was wrong anyway) (closes #35)
   * Remove dupe restriction on job queue, try for smarter *all queuing (closes #41)
   * Remove scary message from Auth::Extensible (closes #38)
+  * Return first port neighbor match, if multiple devices claim the IP (closes #42)
+  * Should handle empty ports preferences (closes #39)
+  * Decode more entPhysicalEntry columns as UTF-8 (closes #37)
+  * Lock device_port table when updating Device Ports (closes #40)
+  * Fix missing node age column in device ports CSV (closes #33)
 
 2.018000 - 2013-10-08
 
