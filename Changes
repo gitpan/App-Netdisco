@@ -1,3 +1,32 @@
+2.020000 - 2013-12-08
+
+  [NEW FEATURES]
+
+  * Add Device PoE status report
+  * Add Nodes with multiple IP addresses report
+  * Add Device addresses with DNS entries report
+  * Add Ports with multiple nodes attached report
+  * Add Ports administratively disabled report
+  * Add Ports that are blocking report
+  * Add Access Point client count report
+  * Move Obserivum plugin outside of this dist, into App::NetdiscoX::
+
+  [ENHANCEMENTS]
+
+  * Can now set untagged VLAN on trunking and non-trunking ports
+  * Add user activity log to frontend admin menu
+  * Add Poller Performance admin report
+  * Add Slow Devices admin report
+  * Add PoE module status in Device details
+
+  [BUG FIXES]
+
+  * Set of Port Name (description) fixed to assume OK dialog response
+  * Default class of a PoE port is 0 if not otherwise defined
+  * Don't try to convert negative mW to dBm in AP power report
+  * LDAP login fix (Daniel Tuecks)
+  * Custom path handling corrections (Daniel Tuecks)
+
 2.019003 - 2013-10-27
 
   [ENHANCEMENTS]
