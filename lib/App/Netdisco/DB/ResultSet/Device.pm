@@ -352,8 +352,9 @@ sub carrying_vlan {
     die "vlan number required for carrying_vlan\n"
       if ref {} ne ref $cond or !exists $cond->{vlan};
 
-    $cond->{'vlans.vlan'} = $cond->{vlan};
-    $cond->{'port_vlans.vlan'} = delete $cond->{vlan};
+    $cond->{'-and'} ||= [];
+    push @{$cond->{'-and'}}, 'vlans.vlan' => $cond->{vlan};
+    push @{$cond->{'-and'}}, 'port_vlans.vlan' => delete $cond->{vlan};
 
     return $rs
       ->search_rs($cond,
@@ -402,7 +403,7 @@ sub carrying_vlan_name {
     die "vlan name required for carrying_vlan_name\n"
       if ref {} ne ref $cond or !exists $cond->{name};
 
-    $cond->{'vlans.description'} = { '-ilike' => $cond->{name} };
+    $cond->{'vlans.description'} = { '-ilike' => delete $cond->{name} };
 
     return $rs
       ->search_rs({}, {
@@ -544,7 +545,6 @@ sub delete {
   my $devices = $self->search(undef, { columns => 'ip' });
 
   foreach my $set (qw/
-    Community
     DeviceIp
     DeviceVlan
     DevicePower
@@ -554,6 +554,15 @@ sub delete {
         { ip => { '-in' => $devices->as_query } },
       )->delete;
   }
+
+  $schema->resultset('Community')->search({
+    ip => { '-in' => $devices->as_query },
+    snmp_auth_tag => undef,
+  })->delete;
+
+  $schema->resultset('Community')->search(
+    { ip => { '-in' => $devices->as_query } },
+  )->update({snmp_comm_rw => undef});
 
   $schema->resultset('Admin')->search({
     device => { '-in' => $devices->as_query },

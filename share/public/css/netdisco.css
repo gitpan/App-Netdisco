@@ -10,11 +10,26 @@ body {
   background: url(../images/navbar_disco.png) no-repeat;
 }
 
-/* magnifying glass icon for search box */
+/* used for icons in sidebar search buttons */
 .nd_navbar-icon {
   vertical-align: sub;
   margin-top: 4px;
   cursor: pointer;
+}
+
+/* careful align of navbar search button and menu */
+.nd_navbar-search-group {
+  margin-top: 0px !important;
+}
+.nd_navbar-search-icon {
+  color: #999;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.nd_navbar-search-caret {
+  padding-top: 10px !important;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
 }
 
 /* for the "logged in as..." text */
@@ -236,9 +251,22 @@ td > form.nd_inline-form {
 /* port admin up/down control */
 .nd_edit-icon, .nd_hand-icon {
   cursor: pointer;
+  float: right;
+  display: none;
+  margin-top: 3px;
+}
+
+/* port admin log view */
+.nd_log-icon {
+  cursor: pointer;
+  color: black;
   float: left;
   display: none;
   margin-top: 3px;
+}
+.nd_log-icon:hover, .nd_log-icon:focus {
+  text-decoration: none;
+  color: black;
 }
 
 /* port power control */
@@ -380,18 +408,6 @@ td > form.nd_inline-form {
   display: none;
 }
 
-/* question mark image with popover for netmap instructions */
-#nd_netmap-help {
-  position: fixed;
-  top: 160px;
-  right: 7px;
-  z-index: 1;
-  color: #555;
-  font-size: 20px;
-  cursor: pointer;
-  display: none;
-}
-
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /* style customization for many items which appear in the sidebar */
 
@@ -399,6 +415,11 @@ td > form.nd_inline-form {
   margin-left: 10px;
   margin-top: 6px;
   margin-bottom: 12px;
+}
+
+/* labels in simple sidebars */
+.nd_sidebar-label {
+  margin-left: 7px;
 }
 
 /* fixup for prepended checkbox in sidebar */
@@ -550,6 +571,15 @@ form .clearfix.success input {
 /* nudge content closer to the header labels in the sidebar */
 .nd_inputs-list li:first-child {
   padding-top: 3px !important;
+}
+
+.nd_netmap-sidebar {
+  margin-top: 7px;
+  margin-left: -9px;
+}
+
+.nd_netmap-sidebar-help {
+  margin-left: 32px;
 }
 
 .icons-ul {

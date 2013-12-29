@@ -162,25 +162,22 @@ sub _try_connect {
 sub _try_read {
   my ($info, $device, $comm) = @_;
 
-  undef $info unless (
+  return undef unless (
     (not defined $info->error)
     and defined $info->uptime
     and ($info->layers or $info->description)
     and $info->class
   );
 
-  if ($device->in_storage) {
-      # read strings are tried before writes, so this should not accidentally
-      # store a write string if there's a good read string also in config.
-      $device->update({snmp_comm => $comm->{community}})
-        if exists $comm->{community};
-      $device->update_or_create_related('community',
-        {snmp_auth_tag => $comm->{tag}}) if $comm->{tag};
+  if ($comm->{community}) {
+      $device->in_storage
+        ? $device->update({snmp_comm => $comm->{community}})
+        : $device->set_column(snmp_comm => $comm->{community});
   }
-  else {
-      $device->set_column(snmp_comm => $comm->{community})
-        if exists $comm->{community};
-  }
+
+  # regardless of device in storage, save the hint
+  $device->update_or_create_related('community',
+    {snmp_auth_tag => $comm->{tag}}) if $comm->{tag};
 
   return $info;
 }
@@ -188,21 +185,15 @@ sub _try_read {
 sub _try_write {
   my ($info, $device, $comm) = @_;
 
-  # SNMP v1/2 R/W must be able to read as well (?)
-  $info = _try_read($info, $device, $comm)
-    if exists $comm->{community};
-  return unless $info;
+  my $loc = $info->load_location;
+  $info->set_location($loc) or return undef;
+  return undef unless ($loc eq $info->load_location);
 
-  $info->set_location( $info->load_location )
-    or return undef;
-
-  if ($device->in_storage) {
-      # one of these two cols must be set
-      $device->update_or_create_related('community', {
-        ($comm->{tag} ? (snmp_auth_tag => $comm->{tag}) : ()),
-        (exists $comm->{community} ? (snmp_comm_rw => $comm->{community}) : ()),
-      });
-  }
+  # one of these two cols must be set
+  $device->update_or_create_related('community', {
+    ($comm->{tag} ? (snmp_auth_tag => $comm->{tag}) : ()),
+    ($comm->{community} ? (snmp_comm_rw => $comm->{community}) : ()),
+  });
 
   return $info;
 }
@@ -250,12 +241,12 @@ sub _build_communities {
   my $snmp_comm_rw = eval { $device->community->snmp_comm_rw };
   my @communities = ();
 
-  # first try last-known-good
+  # try last-known-good read
   push @communities, {read => 1, community => $device->snmp_comm}
     if defined $device->snmp_comm and $mode eq 'read';
 
-  # first try last-known-good
-  push @communities, {read => 1, write => 1, community => $snmp_comm_rw}
+  # try last-known-good write
+  push @communities, {write => 1, community => $snmp_comm_rw}
     if $snmp_comm_rw and $mode eq 'write';
 
   # new style snmp config
@@ -303,13 +294,54 @@ sub _build_communities {
   }
   else {
       push @communities, map {{
-        read  => 1,
         write => 1,
         community => $_,
       }} @{setting('community_rw') || []};
   }
 
+  # but first of all, use external command if configured
+  unshift @communities, _get_external_community($device, $mode)
+    if setting('get_community') and length setting('get_community');
+
   return @communities;
+}
+
+sub _get_external_community {
+  my ($device, $mode) = @_;
+  my $cmd = setting('get_community');
+  my $ip = $device->ip;
+  my $host = $device->dns || $ip;
+
+  if (defined $cmd and length $cmd) {
+      # replace variables
+      $cmd =~ s/\%HOST\%/$host/egi;
+      $cmd =~ s/\%IP\%/$ip/egi;
+
+      my $result = `$cmd`;
+      return () unless defined $result and length $result;
+
+      my @lines = split (m/\n/, $result);
+      foreach my $line (@lines) {
+          if ($line =~ m/^community\s*=\s*(.*)\s*$/i) {
+              if (length $1 and $mode eq 'read') {
+                  return map {{
+                    read => 1,
+                    community => $_,
+                  }} split(m/\s*,\s*/,$1);
+              }
+          }
+          elsif ($line =~ m/^setCommunity\s*=\s*(.*)\s*$/i) {
+              if (length $1 and $mode eq 'write') {
+                  return map {{
+                    write => 1,
+                    community => $_,
+                  }} split(m/\s*,\s*/,$1);
+              }
+          }
+      }
+  }
+
+  return ();
 }
 
 =head2 snmp_comm_reindex( $snmp, $device, $vlan )

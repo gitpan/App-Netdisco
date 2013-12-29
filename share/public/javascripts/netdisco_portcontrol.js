@@ -4,6 +4,7 @@ var nd_save_ok = false;
 // user clicked or asked for port changes to be submitted via ajax
 function port_control (e) {
   var td = $(e).closest('td'),
+      reason = $('#nd_portlog-reason').val(),
       logmessage = $('#nd_portlog-log').val();
   $('#nd_portlog-log').val('');
 
@@ -23,7 +24,8 @@ function port_control (e) {
       ,field:  td.data('field')
       ,action: td.data('action')
       ,value:  td.text().trim()
-      ,log:    logmessage,
+      ,reason: reason
+      ,log:    logmessage
     }
     ,success: function() {
       toastr.info('Submitted change request');
@@ -90,14 +92,14 @@ $(document).ready(function() {
 
   // toggle visibility of port up/down and edit controls
   $('.tab-content').on('mouseenter', '.nd_editable-cell', function() {
-    $(this).children('.nd_hand-icon').show();
+    $(this).children('.nd_hand-icon,.nd_log-icon').show();
     if (! $(this).is(':focus')) {
       $(this).children('.nd_edit-icon').show(); // ports
       $(this).siblings('td').find('.nd_device-details-edit').show(); // details
     }
   });
   $('.tab-content').on('mouseleave', '.nd_editable-cell', function() {
-    $(this).children('.nd_hand-icon').hide();
+    $(this).children('.nd_hand-icon,.nd_log-icon').hide();
     if (! $(this).is(':focus')) {
       $(this).children('.nd_edit-icon').hide(); // ports
       $(this).siblings('td').find('.nd_device-details-edit').hide(); // details
@@ -119,6 +121,12 @@ $(document).ready(function() {
     $('#nd_portlog').one('hidden', function() {
       port_control(clicked); // save
     });
+    if ($(this).hasClass('icon-hand-up')) {
+      $('#nd_portlog-reason').val('resolved');
+    }
+    else {
+      $('#nd_portlog-reason').val('other');
+    }
     $('#nd_portlog').modal('show');
   });
 

@@ -46,6 +46,7 @@ web_plugins:
   - Report::DevicePoeStatus
   - Report::DuplexMismatch
   - Report::NodeMultiIPs
+  - Report::PhonesDiscovered
   - Report::SsidInventory
   - Report::VlanInventory
   - AdminTask::JobQueue
@@ -74,6 +75,8 @@ extra_web_plugins: []
 # mibdirs defaults to contents of mibhome
 community: ['public']
 community_rw: ['private']
+snmp_auth: []
+get_community: ''
 bulkwalk_off: false
 bulkwalk_no: []
 bulkwalk_repeaters: 20
@@ -96,6 +99,9 @@ macsuck_min_age: 0
 arpnip_no: []
 arpnip_only: []
 arpnip_min_age: 0
+expire_devices: 0
+expire_nodes: 0
+expire_nodes_archive: 0
 store_wireless_clients: true
 store_modules: true
 ignore_interfaces:
@@ -121,6 +127,17 @@ portctl_nophones: false
 portctl_vlans: false
 portctl_uplinks: false
 check_userlog: true
+port_control_reasons:
+  address:     'Address Allocation Abuse'
+  copyright:   'Copyright Violation'
+  dos:         'Denial of Service'
+  bandwidth:   'Excessive Bandwidth'
+  polling:     'Excessive Polling of DNS/DHCP/SNMP'
+  noserv:      'Not In Service'
+  exploit:     'Remote Exploit Possible'
+  compromised: 'System Compromised'
+  other:       'Other'
+  resolved:    'Issue Resolved'
 
 # --------------
 # BACKEND DAEMON

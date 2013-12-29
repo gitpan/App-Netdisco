@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.020002';
+our $VERSION = '2.020003_001';
 
 BEGIN {
   if (not ($ENV{DANCER_APPDIR} || '')
@@ -45,14 +45,17 @@ use Dancer ':script';
 
 if (ref {} eq ref setting('database')) {
     my $name = (setting('database')->{name} || 'netdisco');
-    my $host = (setting('database')->{host} || 'localhost');
-    my $user = (setting('database')->{user});
-    my $pass = (setting('database')->{pass});
+    my $host = setting('database')->{host};
+    my $user = setting('database')->{user};
+    my $pass = setting('database')->{pass};
+
+    my $dsn = "dbi:Pg:dbname=${name}";
+    $dsn .= ";host=${host}" if $host;
 
     # set up the netdisco schema now we have access to the config
     # but only if it doesn't exist from an earlier config style
     setting('plugins')->{DBIC}->{netdisco} ||= {
-        dsn => (sprintf 'dbi:Pg:dbname=%s;host=%s', $name, $host),
+        dsn  => $dsn,
         user => $user,
         pass => $pass,
         options => {
@@ -121,9 +124,11 @@ See the demo at: L<http://netdisco2-demo.herokuapp.com/>
 
 =back
 
-If you have any trouble getting the frontend running, speak to someone in the
-C<#netdisco> IRC channel (on freenode). Before installing or upgrading please
-review the latest L<Release Notes|App::Netdisco::Manual::ReleaseNotes>.
+If you have any trouble getting installed or running, check out the
+L<Deployment|App::Netdisco::Manual::Deployment> notes, or speak to someone in
+the C<#netdisco> IRC channel (on freenode).  Before installing or upgrading
+please always review the latest L<Release
+Notes|App::Netdisco::Manual::ReleaseNotes>.
 
 =head1 Dependencies
 
