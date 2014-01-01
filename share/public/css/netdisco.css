@@ -495,6 +495,10 @@ td > form.nd_inline-form {
   margin-left: 5px !important;
   width: 152px;
 }
+.nd_sidebar-topinput {
+  margin-left: 5px !important;
+  width: 152px;
+}
 
 /* set the day/mon/year drop-down width */
 #nd_days-select {
@@ -522,10 +526,21 @@ td > form.nd_inline-form {
 }
 
 /* sidebar submit button width and spacing */
-.nd_sidebar button {
+
+/* when the sidebar submit button DOES NOT HAVE a dropdown */
+.nd_sidebar button:not(.nd_sidebar-btn-drop):not(.nd_sidebar-btn-drop-drop) {
   margin-top: 9px;
   margin-left: -3px;
   width: 165px;
+}
+
+/* when the sidebar submit button HAS a dropdown */
+.nd_sidebar-btn-drop {
+  width: 138px;
+}
+.nd_sidebar-btn-drop-drop {
+  height: 28px;
+  width: 28px;
 }
 
 /* little icon inside of search input fields */
@@ -571,6 +586,10 @@ form .clearfix.success input {
 /* nudge content closer to the header labels in the sidebar */
 .nd_inputs-list li:first-child {
   padding-top: 3px !important;
+}
+
+.nd_sidebar-legend {
+  margin-bottom: 9px;
 }
 
 .nd_netmap-sidebar {

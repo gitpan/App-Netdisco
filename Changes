@@ -1,4 +1,4 @@
-2.020003_001 - 2013-12-29
+2.020003_002 - 2013-12-29
 
   [NEW FEATURES]
 
@@ -9,6 +9,7 @@
   * [#19] Ask for Reason when changing Port up/down Status, or VLAN
   * [#30] Support for expire_devices, expire_nodes, and expire_nodes_archive
   * Port Log viewable via an icon by device port name (Port Control rights req'd)
+  * [#1] Subnet Utilization report (J. van Ingen)
 
   [ENHANCEMENTS]
 
@@ -18,6 +19,9 @@
   * Port MAC query now only returns distinct MAC's
   * Keep a hint to SNMP community if new style snmp_auth config is in use
   * [#43] Add doc note about PostgreSQL MD5 authN
+  * [#49] Allow device port searching with preference for port/name/vlan.
+    This is to support some devices (HP?) which have plain numbers for port names
+    and Netdisco defaults to assuming this is a VLAN number (R. Kerr)
 
   [BUG FIXES]
 
@@ -30,6 +34,7 @@
   * [#58] Search by VLAN name now works (R. Kerr)
   * Make "Not" option work for vlan number search in Device Ports
   * [#48] Fix for netmap links when domain_suffix is set (R. Kerr)
+  * [#57] Port sort order for Extreme switches "1:10" format
 
 2.020002 - 2013-12-11
 

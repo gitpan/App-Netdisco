@@ -45,10 +45,12 @@ web_plugins:
   - Report::DeviceByLocation
   - Report::DevicePoeStatus
   - Report::DuplexMismatch
+  - Report::IpInventory
   - Report::NodeMultiIPs
   - Report::PhonesDiscovered
   - Report::SsidInventory
   - Report::VlanInventory
+  - Report::SubnetUtilization
   - AdminTask::JobQueue
   - AdminTask::PollerPerformance
   - AdminTask::SlowDevices
@@ -56,6 +58,7 @@ web_plugins:
   - AdminTask::Topology
   - AdminTask::UserLog
   - AdminTask::Users
+  - AdminTask::PortLog
   - Search::Device
   - Search::Node
   - Search::VLAN
