@@ -1,4 +1,4 @@
-2.020003_002 - 2013-12-29
+2.020003_003 - 2014-01-06
 
   [NEW FEATURES]
 
@@ -22,6 +22,9 @@
   * [#49] Allow device port searching with preference for port/name/vlan.
     This is to support some devices (HP?) which have plain numbers for port names
     and Netdisco defaults to assuming this is a VLAN number (R. Kerr)
+  * Upgrade floatThead JS plugin to improve performance for large tables
+  * Don't queue devices which are excluded by configuration or don't have the
+    layers to support the operation
 
   [BUG FIXES]
 
@@ -35,6 +38,7 @@
   * Make "Not" option work for vlan number search in Device Ports
   * [#48] Fix for netmap links when domain_suffix is set (R. Kerr)
   * [#57] Port sort order for Extreme switches "1:10" format
+  * [#65] Ignore smmp_ver in DB when reconnecting to a device.
 
 2.020002 - 2013-12-11
 
