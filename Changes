@@ -1,15 +1,17 @@
-2.020003_003 - 2014-01-06
+2.021000 - 2014-01-08
 
   [NEW FEATURES]
 
   * Add IP Phones discovered through LLDP/CDP report
   * Add device/node/vlan/port specific search from Navbar
+  * Add Undiscovered Neighbors admin report
   * [#3] [#47] Device Neighbor Map can have max depth and VLAN filter
   * [#31] get_community now supported
   * [#19] Ask for Reason when changing Port up/down Status, or VLAN
   * [#30] Support for expire_devices, expire_nodes, and expire_nodes_archive
   * Port Log viewable via an icon by device port name (Port Control rights req'd)
   * [#1] Subnet Utilization report (J. van Ingen)
+  * Support for snmpforce_v1, snmpforce_v2, snmpforce_v3
 
   [ENHANCEMENTS]
 
