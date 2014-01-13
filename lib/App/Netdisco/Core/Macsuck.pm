@@ -57,8 +57,8 @@ sub do_macsuck {
   my $ip = $device->ip;
 
   # would be possible just to use now() on updated records, but by using this
-  # same value for them all, we _can_ if we want add a job at the end to
-  # select and do something with the updated set (no reason to yet, though)
+  # same value for them all, we can if we want add a job at the end to
+  # select and do something with the updated set (see set archive, below)
   my $now = 'to_timestamp('. (join '.', gettimeofday) .')';
   my $total_nodes = 0;
 
@@ -115,8 +115,18 @@ sub do_macsuck {
       }
   }
 
-  debug sprintf ' [%s] macsuck - %s forwarding table entries',
+  debug sprintf ' [%s] macsuck - %s updated forwarding table entries',
     $ip, $total_nodes;
+
+  # a use for $now ... need to archive dissapeared nodes
+  my $archived = schema('netdisco')->resultset('Node')->search({
+    switch => $ip,
+    time_last => { '<' => \$now },
+  })->update({ active => \'false' });
+
+  debug sprintf ' [%s] macsuck - removed %s fwd table entries to archive',
+    $ip, $archived;
+
   $device->update({last_macsuck => \$now});
 }
 
@@ -336,13 +346,6 @@ sub _walk_fwtable {
           next;
       }
 
-      # possibly move node to lag master
-      if (defined $device_port->slave_of
-            and exists $device_ports->{$device_port->slave_of}) {
-          $port = $device_port->slave_of;
-          $device_port = $device_ports->{$port};
-      }
-
       # check to see if the port is connected to another device
       # and if we have that device in the database.
 
@@ -388,6 +391,13 @@ sub _walk_fwtable {
           # when there's no CDP/LLDP, we only want to gather macs at the
           # topology edge, hence skip ports with known device macs.
           next unless setting('macsuck_bleed');
+      }
+
+      # possibly move node to lag master
+      if (defined $device_port->slave_of
+            and exists $device_ports->{$device_port->slave_of}) {
+          $port = $device_port->slave_of;
+          $device_ports->{$port}->update({is_uplink => \'true'});
       }
 
       my $vlan = $fw_vlan->{$idx} || $comm_vlan || '0';
