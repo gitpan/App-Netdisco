@@ -251,7 +251,7 @@ __PACKAGE__->belongs_to( oui => 'App::Netdisco::DB::Result::Oui',
 
 =head1 ADDITIONAL METHODS
 
-=head2
+=head2 neighbor
 
 Returns the Device entry for the neighbour Device on the given port.
 
