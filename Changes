@@ -1,3 +1,26 @@
+2.021001
+
+  [NEW FEATURES]
+
+  * [#81] Identify wireless nodes and provide information when available 
+  * [#13] Support IP address ranges in *_only/*_no configuration
+  * [#14] Support partial DNS names in *_only/*_no (via regexp)
+
+  [ENHANCEMENTS]
+
+  * [#32] Show device layers in Details tab
+  * [#66] Remove reference to "native" VLAN in code and replace with "untagged"
+  * [#66] DB Schema update to add "native" column to PK of device_port_vlan table
+  * [#64] Addition of Wireshark abbreviations for OUI manufacturers
+  * [#79] Support perlbrew environment as alternative to localenv
+  * [#52] Check is neighbour remote_id is a MAC (R. Kerr)
+
+  [BUG FIXES]
+
+  * Correct is_discoverable check in Undiscovered Neighbors report
+  * Correct macsuck for Q-BRIDGE-MIB based devices
+  * Allow cached SNMP community hint to override SNMP version cycle
+
 2.021000 - 2014-01-08
 
   [NEW FEATURES]

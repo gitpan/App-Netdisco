@@ -21,8 +21,8 @@ hook 'before' => sub {
     { name => 'c_speed',       label => 'Speed',             default => ''   },
     { name => 'c_mac',         label => 'Port MAC',          default => ''   },
     { name => 'c_mtu',         label => 'MTU',               default => ''   },
-    { name => 'c_vlan',        label => 'Native VLAN',       default => 'on' },
-    { name => 'c_vmember',     label => 'Tagged VLANs',      default => 'on' },
+    { name => 'c_pvid',        label => 'Native VLAN',       default => 'on' },
+    { name => 'c_vmember',     label => 'VLAN Membership',   default => 'on' },
     { name => 'c_power',       label => 'PoE',               default => ''   },
     { name => 'c_nodes',       label => 'Connected Nodes',   default => ''   },
     { name => 'c_neighbors',   label => 'Connected Devices', default => 'on' },
@@ -48,6 +48,7 @@ hook 'before' => sub {
   var('connected_properties' => [
     { name => 'n_age',      label => 'Age Stamp',     default => ''   },
     { name => 'n_ip',       label => 'IP Address',    default => 'on' },
+    { name => 'n_ssid',     label => 'SSID',          default => 'on' },
     { name => 'n_archived', label => 'Archived Data', default => ''   },
   ]);
 

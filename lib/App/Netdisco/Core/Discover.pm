@@ -8,6 +8,7 @@ use App::Netdisco::Util::DNS ':all';
 use NetAddr::IP::Lite ':lower';
 use Encode;
 use Try::Tiny;
+use Net::MAC;
 
 use base 'Exporter';
 our @EXPORT = ();
@@ -204,8 +205,8 @@ sub store_interfaces {
   my $i_duplex_admin = $snmp->i_duplex_admin;
   my $i_stp_state    = $snmp->i_stp_state;
   my $i_vlan         = $snmp->i_vlan;
-  my $i_pvid         = $snmp->i_pvid;
   my $i_lastchange   = $snmp->i_lastchange;
+  my $agg_ports      = $snmp->agg_ports;
 
   # clear the cached uptime and get a new one
   my $dev_uptime = $snmp->load_uptime;
@@ -277,9 +278,21 @@ sub store_interfaces {
           stp          => $i_stp_state->{$entry},
           type         => $i_type->{$entry},
           vlan         => $i_vlan->{$entry},
-          pvid         => $i_pvid->{$entry},
+          pvid         => $i_vlan->{$entry},
+          is_master    => 'false',
+          slave_of     => undef,
           lastchange   => $lc,
       };
+  }
+
+  # must do this after building %interfaces so that we can set is_master
+  foreach my $sidx (keys %$agg_ports) {
+      my $slave  = $interfaces->{$sidx} or next;
+      my $master = $interfaces->{ $agg_ports->{$sidx} } or next;
+      next unless exists $interfaces{$slave} and exists $interfaces{$master};
+
+      $interfaces{$slave}->{slave_of} = $master;
+      $interfaces{$master}->{is_master} = 'true';
   }
 
   schema('netdisco')->resultset('DevicePort')->txn_do_locked(sub {
@@ -664,6 +677,13 @@ sub store_neighbors {
                 $device->ip, $remote_ip, $port, $remote_id;
 
               if (!defined $neigh) {
+                  my $mac = Net::MAC->new(mac => $remote_id, 'die' => 0, verbose => 0);
+                  if (not $mac->get_error) {
+                      $neigh = $devices->single({mac => $remote_id});
+                  }
+              }
+
+              if (!defined $neigh) {
                   (my $shortid = $remote_id) =~ s/\..*//;
                   $neigh = $devices->single({name => { -ilike => "${shortid}%" }});
               }
@@ -766,6 +786,17 @@ sub store_neighbors {
           is_uplink   => \"true",
           manual_topo => \"false",
       });
+
+      if (defined $portrow->slave_of and
+          my $master = schema('netdisco')->resultset('DevicePort')
+              ->single({ip => $device->ip, port => $portrow->slave_of})) {
+
+          $master->update({
+            remote_ip => $remote_ip,
+            is_uplink => \"true",
+            manual_topo => \"false",
+          });
+      }
   }
 
   return @to_discover;

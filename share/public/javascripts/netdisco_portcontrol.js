@@ -92,14 +92,16 @@ $(document).ready(function() {
 
   // toggle visibility of port up/down and edit controls
   $('.tab-content').on('mouseenter', '.nd_editable-cell', function() {
-    $(this).children('.nd_hand-icon,.nd_log-icon').show();
+    $(this).children('.nd_hand-icon').show();
+    $(this).children('.nd_log-icon').css('visibility', 'visible');
     if (! $(this).is(':focus')) {
       $(this).children('.nd_edit-icon').show(); // ports
       $(this).siblings('td').find('.nd_device-details-edit').show(); // details
     }
   });
   $('.tab-content').on('mouseleave', '.nd_editable-cell', function() {
-    $(this).children('.nd_hand-icon,.nd_log-icon').hide();
+    $(this).children('.nd_hand-icon').hide();
+    $(this).children('.nd_log-icon').css('visibility', 'hidden');
     if (! $(this).is(':focus')) {
       $(this).children('.nd_edit-icon').hide(); // ports
       $(this).siblings('td').find('.nd_device-details-edit').hide(); // details
@@ -146,7 +148,7 @@ $(document).ready(function() {
     else if (nl) {
       event.preventDefault();
 
-      if (td.data('field') == 'c_vlan') {
+      if (td.data('field') == 'c_pvid') {
         $('#nd_portlog').one('hidden', function() {
           port_control(cell); // save
         });

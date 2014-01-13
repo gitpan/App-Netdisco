@@ -72,13 +72,14 @@ sub do_macsuck {
   my $interfaces = $snmp->interfaces;
 
   # get forwarding table data via basic snmp connection
-  my $fwtable = { 0 => _walk_fwtable($device, $snmp, $interfaces, $port_macs, $device_ports) };
+  my $fwtable = _walk_fwtable($device, $snmp, $interfaces, $port_macs, $device_ports);
 
   # ...then per-vlan if supported
   my @vlan_list = _get_vlan_list($device, $snmp);
   foreach my $vlan (@vlan_list) {
       snmp_comm_reindex($snmp, $device, $vlan);
-      $fwtable->{$vlan} = _walk_fwtable($device, $snmp, $interfaces, $port_macs, $device_ports);
+      my $pv_fwtable = _walk_fwtable($device, $snmp, $interfaces, $port_macs, $device_ports, $vlan);
+      $fwtable = {%$fwtable, %$pv_fwtable};
   }
 
   # now it's time to call store_node for every node discovered
@@ -97,14 +98,12 @@ sub do_macsuck {
           debug sprintf ' [%s] macsuck - port %s vlan %s : %s nodes',
             $ip, $port, $vlan, scalar keys %{ $fwtable->{$vlan}->{$port} };
 
-          # make sure this port is UP in netdisco
-          $device_ports->{$port}->update({up_admin => 'up', up => 'up'});
+          # make sure this port is UP in netdisco (unless it's a lag master,
+          # because we can still see nodes without a functioning aggregate)
+          $device_ports->{$port}->update({up_admin => 'up', up => 'up'})
+            if not $device_ports->{$port}->is_master;
 
           foreach my $mac (keys %{ $fwtable->{$vlan}->{$port} }) {
-
-              # get VLAN from Q-BRIDGE if available
-              $vlan = $fwtable->{$vlan}->{$port}->{$mac}
-                if $vlan == 0;
 
               # remove vlan 0 entry for this MAC addr
               delete $fwtable->{0}->{$_}->{$mac}
@@ -287,7 +286,7 @@ sub _get_vlan_list {
 # walks the forwarding table (BRIDGE-MIB) for the device and returns a
 # table of node entries.
 sub _walk_fwtable {
-  my ($device, $snmp, $interfaces, $port_macs, $device_ports) = @_;
+  my ($device, $snmp, $interfaces, $port_macs, $device_ports, $comm_vlan) = @_;
   my $cache = {};
 
   my $fw_mac   = $snmp->fw_mac;
@@ -327,14 +326,6 @@ sub _walk_fwtable {
           next;
       }
 
-      # TODO: add proper port channel support!
-      if ($port =~ m/port.channel/i) {
-          debug sprintf
-            ' [%s] macsuck %s - port %s is LAG member - skipping.',
-            $device->ip, $mac, $port;
-          next;
-      }
-
       # this uses the cached $ports resultset to limit hits on the db
       my $device_port = $device_ports->{$port};
 
@@ -343,6 +334,13 @@ sub _walk_fwtable {
             ' [%s] macsuck %s - port %s is not in database - skipping.',
             $device->ip, $mac, $port;
           next;
+      }
+
+      # possibly move node to lag master
+      if (defined $device_port->slave_of
+            and exists $device_ports->{$device_port->slave_of}) {
+          $port = $device_port->slave_of;
+          $device_port = $device_ports->{$port};
       }
 
       # check to see if the port is connected to another device
@@ -392,7 +390,8 @@ sub _walk_fwtable {
           next unless setting('macsuck_bleed');
       }
 
-      $cache->{$port}->{$mac} = ($fw_vlan->{$idx} || '0');
+      my $vlan = $fw_vlan->{$idx} || $comm_vlan || '0';
+      ++$cache->{$vlan}->{$port}->{$mac};
   }
 
   return $cache;

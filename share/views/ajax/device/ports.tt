@@ -17,7 +17,7 @@
   </tbody>
     [% FOREACH row IN results %]
     <tr>
-      <td class="nd_center-cell">
+      <td class="nd_center-cell nd_devport-icon">
         [% IF row.up_admin != 'up' %]
         <i class="icon-remove"></i>
         [% ELSIF row.stp == 'blocking' %]
@@ -28,6 +28,15 @@
         <i class="icon-arrow-down text-error"></i>
         [% ELSE %]
         <i class="icon-angle-up text-success"></i>
+        [% END %]
+        [% IF row.slave_of %]<br/>
+          [% IF row.get_column('agg_master_up_admin') != 'up' %]
+            <small><i class="icon-group muted"></i></small>
+          [% ELSIF row.get_column('agg_master_up') == 'up' %]
+            <small><i class="icon-group text-success"></i></small>
+          [% ELSE %]
+            <small><i class="icon-group text-error"></i></small>
+          [% END %]
         [% END %]
       </td>
 
@@ -66,10 +75,18 @@
       [% ELSE %]
       <td nowrap>
       [% END %]
-        <a class="nd_linkcell nd_this-port-only" href="[% uri_for('/device',
+        <a class="nd_this-port-only nd_port-only-first" href="[% uri_for('/device',
             self_options) %]&q=[% params.q | uri %]&f=[% row.port | uri %]&prefer=port">
-        [% row.port | html_entity %]
-      </a></td>
+          [% IF row.is_master %]
+            <small><i class="icon-group muted"></i></small>&nbsp;
+          [% END %]
+        [% row.port | html_entity %]</a>
+        [% IF row.slave_of %]<br/>
+          <a class="nd_this-port-only" href="[% uri_for('/device',
+              self_options) %]&q=[% params.q | uri %]&f=[% row.slave_of | uri %]&prefer=port">
+          [% row.slave_of | html_entity %]</a>
+        [% END %]
+      </td>
       [% END %]
 
       [% FOREACH config IN settings._extra_device_port_cols %]
@@ -129,10 +146,10 @@
       <td>[% row.mtu | html_entity %]</td>
       [% END %]
 
-      [% IF params.c_vlan %]
+      [% IF params.c_pvid %]
       [% IF user_can_port_control AND params.c_admin %]
       <td class="nd_editable-cell" contenteditable="true" data-default="[% row.vlan | html_entity %]"
-        data-field="c_vlan" data-for-device="[% device.ip | html_entity %]" data-for-port="[% row.port | html_entity %]">
+        data-field="c_pvid" data-for-device="[% device.ip | html_entity %]" data-for-port="[% row.port | html_entity %]">
       <i class="icon-edit nd_edit-icon"></i>
       <div class="nd_editable-cell-content">
         [% IF row.vlan %][% row.vlan | html_entity %][% END %]
@@ -149,17 +166,17 @@
 
       [% IF params.c_vmember %]
       <td>
-        [% IF row.tagged_vlans_count %]
+        [% IF row.vlan_count %]
         [% SET output = '' %]
         [% SET vlanlist = [] %]
-        [% FOREACH vlan IN row.tagged_vlans %][% vlanlist.push(vlan.vlan) %][% END %]
+        [% FOREACH vlan IN row.all_port_vlans %][% vlanlist.push(vlan.get_column('vlan')) %][% END %]
         [% FOREACH vlan IN vlanlist.nsort %]
           [% SET output = output _
             '<a href="' _ uri_for('/search') _ '?tab=vlan&q=' _ vlan _ '">' _ vlan _ '</a>' %]
           [% SET output = output _ ', ' IF NOT loop.last %]
         [% END %]
-        [% IF row.tagged_vlans_count > 10 %] [%# TODO make this a settable variable %]
-          [% SET output = '<div class="nd_vlan-total">(' _ row.tagged_vlans_count
+        [% IF row.vlan_count > 10 %] [%# TODO make this a settable variable %]
+          [% SET output = '<div class="nd_vlan-total">(' _ row.vlan_count
             _ ')</div><span class="nd_linkcell nd_collapse-vlans">
               <div class="nd_arrow-up-down-left icon-chevron-up icon-large"></div>Show VLANs</span>
               <div class="nd_collapsing nd_collapse-pre-hidden">' _ output %]
@@ -224,7 +241,13 @@
             [% ' id: '_ row.remote_id IF row.remote_id %]
             [% ' type: '_ row.remote_type IF row.remote_type %])</a>
           [% ELSIF row.remote_ip AND row.remote_port %]
-          <i class="icon-unlink text-error"></i>&nbsp;
+            [% IF row.remote_type AND row.remote_type.match('(?i)ip.phone') %]
+              <i class="icon-phone"></i>&nbsp;
+            [% ELSIF row.remote_type AND row.remote_type.match('(cisco\s+AIR-[L|C]?AP|-K9W8-|^AP:\s)') %]
+              <i class="icon-signal"></i>&nbsp;
+            [% ELSE %]
+              <i class="icon-unlink text-error"></i>&nbsp;
+            [% END %]
           <a href="[% search_node %]&q=[% row.remote_ip | uri %]">
             [% row.remote_ip | html_entity %] (port: [% row.remote_port | html_entity %]
             [% ' id: '_ row.remote_id IF row.remote_id %]
@@ -237,8 +260,19 @@
         [% FOREACH node IN row.$nodes %]
           [% '<br/>' IF (row.remote_ip OR row.is_uplink) OR NOT loop.first %]
           [% '<i class="icon-book"></i>&nbsp; ' IF NOT node.active %]
+          [% '<i class="icon-signal"></i>&nbsp; ' IF node.wireless.defined %]
           <a href="[% search_node %]&q=[% node.net_mac.$mac_format_call | uri %]">
             [% node.net_mac.$mac_format_call | html_entity %]</a>
+          [% IF (node.vlan > 0) && (node.vlan != row.vlan) %]
+            (on vlan [% node.vlan | html_entity %])
+          [% END %]            
+          [% IF params.n_ssid AND node.wireless.defined %]
+            (SSID:
+            [% FOREACH wlan IN node.wireless %]
+              [%+ wlan.ssid | html_entity %]
+            [% END %]
+            )
+          [% END %]
           [% ' (' _ node.time_last_age _ ')' IF params.n_age %]
           [% IF params.n_ip %]
             [% FOREACH ip IN node.ips %]

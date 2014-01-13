@@ -64,9 +64,9 @@ sub with_is_free {
     ->search({},
       {
         '+columns' => { is_free =>
-          \["up != 'up' and "
+          \["me.up != 'up' and "
               ."age(now(), to_timestamp(extract(epoch from device.last_discover) "
-                ."- (device.uptime - lastchange)/100)) "
+                ."- (device.uptime - me.lastchange)/100)) "
               ."> ?::interval",
             [{} => $interval]] },
         join => 'device',
@@ -93,11 +93,11 @@ sub only_free_ports {
     ->search_rs($cond, $attrs)
     ->search(
       {
-        'up' => { '!=' => 'up' },
+        'me.up' => { '!=' => 'up' },
       },{
         where =>
           \["age(now(), to_timestamp(extract(epoch from device.last_discover) "
-                ."- (device.uptime - lastchange)/100)) "
+                ."- (device.uptime - me.lastchange)/100)) "
               ."> ?::interval",
             [{} => $interval]],
       join => 'device' },
@@ -111,7 +111,7 @@ will add the following additional synthesized columns to the result set:
 
 =over 4
 
-=item tagged_vlans_count
+=item vlan_count
 
 =back
 
@@ -124,14 +124,14 @@ sub with_vlan_count {
     ->search_rs($cond, $attrs)
     ->search({},
       {
-        '+columns' => { tagged_vlans_count =>
-          $rs->result_source->schema->resultset('Virtual::DevicePortVlanTagged')
+        '+columns' => { vlan_count =>
+          $rs->result_source->schema->resultset('DevicePortVlan')
             ->search(
               {
-                'dpvt.ip' => { -ident => 'me.ip' },
-                'dpvt.port' => { -ident => 'me.port' },
+                'dpv.ip'   => { -ident => 'me.ip' },
+                'dpv.port' => { -ident => 'me.port' },
               },
-              { alias => 'dpvt' }
+              { alias => 'dpv' }
             )->count_rs->as_query
         },
       });

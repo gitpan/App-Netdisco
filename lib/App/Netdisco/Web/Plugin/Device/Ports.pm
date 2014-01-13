@@ -27,18 +27,18 @@ get '/ajax/content/device/ports' => require_login sub {
             if (param('invert')) {
                 $set = $set->search({
                   'me.vlan' => { '!=' => $f },
-                  'port_vlans_tagged.vlan' => [
+                  'port_vlans.vlan' => [
                     '-or' => { '!=' => $f }, { '=' => undef }
                   ],
-                }, { join => 'port_vlans_tagged' });
+                }, { join => 'port_vlans' });
             }
             else {
                 $set = $set->search({
                   -or => {
                     'me.vlan' => $f,
-                    'port_vlans_tagged.vlan' => $f,
+                    'port_vlans.vlan' => $f,
                   },
-                }, { join => 'port_vlans_tagged' });
+                }, { join => 'port_vlans' });
             }
 
             return unless $set->count;
@@ -108,16 +108,19 @@ get '/ajax/content/device/ports' => require_login sub {
         $set = $set->search({-or => \@combi});
     }
 
+    # get aggregate master status
+    $set = $set->search({}, {
+      'join' => 'agg_master',
+      '+select' => [qw/agg_master.up_admin agg_master.up/],
+      '+as'     => [qw/agg_master_up_admin agg_master_up/],
+    });
+
     # make sure query asks for formatted timestamps when needed
     $set = $set->with_times if param('c_lastchange');
 
-    # get number of vlans on the port to control whether to list them or not
-    $set = $set->with_vlan_count if param('c_vmember');
-
-    # run single collapsed query for all relations, but only if we're not
-    # also fetching archived data (tests show it's better this way)
-    $set = $set->search_rs({}, { prefetch => [{ port_vlans_tagged => 'vlan'}] })
-      if param('c_vmember') and not (param('c_nodes') and param('n_archived'));
+    # get vlans on the port
+    $set = $set->search_rs({}, { prefetch => 'all_port_vlans' })->with_vlan_count
+      if param('c_vmember');
 
     # what kind of nodes are we interested in?
     my $nodes_name = (param('n_archived') ? 'nodes' : 'active_nodes');
@@ -127,6 +130,10 @@ get '/ajax/content/device/ports' => require_login sub {
 
     # retrieve active/all connected nodes, if asked for
     $set = $set->search_rs({}, { prefetch => [{$nodes_name => 'ips'}] })
+      if param('c_nodes');
+
+    # retrieve wireless SSIDs, if asked for
+    $set = $set->search_rs({}, { prefetch => [{$nodes_name => 'wireless'}] })
       if param('c_nodes');
 
     # retrieve neighbor devices, if asked for

@@ -53,6 +53,10 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "remote_id",
   { data_type => "text", is_nullable => 1 },
+  "is_master",
+  { data_type => "bool", is_nullable => 0, default_value => \"false" },
+  "slave_of",
+  { data_type => "text", is_nullable => 1 },
   "manual_topo",
   { data_type => "bool", is_nullable => 0, default_value => \"false" },
   "is_uplink",
@@ -80,16 +84,29 @@ Returns the Device table entry to which the given Port is related.
 
 __PACKAGE__->belongs_to( device => 'App::Netdisco::DB::Result::Device', 'ip' );
 
-=head2 vlans
+=head2 port_vlans
 
 Returns the set of C<device_port_vlan> entries associated with this Port.
+These will be both tagged and untagged. Use this relation in search conditions.
 
-These will be both native and non-native (tagged). See also
-C<port_vlans_tagged> and C<tagged_vlans>.
+See also C<all_port_vlans>.
 
 =cut
 
-__PACKAGE__->has_many( vlans => 'App::Netdisco::DB::Result::DevicePortVlan',
+__PACKAGE__->has_many( port_vlans => 'App::Netdisco::DB::Result::DevicePortVlan',
+  { 'foreign.ip' => 'self.ip', 'foreign.port' => 'self.port' } );
+
+=head2 all_port_vlans
+
+Returns the set of C<device_port_vlan> entries associated with this Port.
+These will be both tagged and untagged. Use this relation when prefetching related
+C<device_port_vlan> rows.
+
+See also C<port_vlans>.
+
+=cut
+
+__PACKAGE__->has_many( all_port_vlans => 'App::Netdisco::DB::Result::DevicePortVlan',
   { 'foreign.ip' => 'self.ip', 'foreign.port' => 'self.port' } );
 
 =head2 nodes / active_nodes / nodes_with_age / active_nodes_with_age
@@ -166,6 +183,22 @@ __PACKAGE__->might_have(
     }
 );
 
+=head2 agg_master
+
+Returns another row from the C<device_port> table if this port is slave
+to another in a link aggregate.
+
+=cut
+
+__PACKAGE__->belongs_to(
+    agg_master => 'App::Netdisco::DB::Result::DevicePort', {
+      'foreign.ip'   => 'self.ip',
+      'foreign.port' => 'self.slave_of',
+    }, {
+      join_type => 'LEFT',
+    }
+);
+
 =head2 neighbor_alias
 
 When a device port has an attached neighbor device, this relationship will
@@ -183,33 +216,17 @@ __PACKAGE__->has_many( neighbor_alias => 'App::Netdisco::DB::Result::DeviceIp',
   { join_type => 'LEFT' },
 );
 
-=head2 port_vlans_tagged
+=head2 vlans
 
-Returns a set of rows from the C<device_port_vlan> table relating to this
-port, where the VLANs are all tagged.
-
-=cut
-
-__PACKAGE__->has_many( port_vlans_tagged => 'App::Netdisco::DB::Result::Virtual::DevicePortVlanTagged',
-  {
-    'foreign.ip' => 'self.ip',
-    'foreign.port' => 'self.port',
-  },
-  { join_type => 'LEFT',
-    cascade_copy => 0, cascade_update => 0, cascade_delete => 0 },
-);
-
-=head2 tagged_vlans
-
-As compared to C<port_vlans_tagged>, this relationship returns a set of VLAN
+As compared to C<port_vlans>, this relationship returns a set of VLAN
 row objects for the VLANs on the given port, which might be more useful if you
 want to find out details such as the VLAN name.
 
-See also C<tagged_vlans_count>.
+See also C<vlan_count>.
 
 =cut
 
-__PACKAGE__->many_to_many( tagged_vlans => 'port_vlans_tagged', 'vlan' );
+__PACKAGE__->many_to_many( vlans => 'all_port_vlans', 'vlan' );
 
 
 =head2 oui
@@ -251,19 +268,28 @@ sub neighbor {
 
 =head1 ADDITIONAL COLUMNS
 
-=head2 tagged_vlans_count
+=head2 native
 
-Returns the number of tagged VLANs active on this device port. Enable this
-column by applying the C<with_vlan_count()> modifier to C<search()>.
+An alias for the C<vlan> column, which stores the PVID (that is, the VLAN
+ID assigned to untagged frames received on the port).
 
 =cut
 
-sub tagged_vlans_count { return (shift)->get_column('tagged_vlans_count') }
+sub native { return (shift)->vlan }
+
+=head2 vlan_count
+
+Returns the number of VLANs active on this device port. Enable this column by
+applying the C<with_vlan_count()> modifier to C<search()>.
+
+=cut
+
+sub vlan_count { return (shift)->get_column('vlan_count') }
 
 =head2 lastchange_stamp
 
 Formatted version of the C<lastchange> field, accurate to the minute. Enable
-this column by applying the C<with_vlan_count()> modifier to C<search()>.
+this column by applying the C<with_times()> modifier to C<search()>.
 
 The format is somewhat like ISO 8601 or RFC3339 but without the middle C<T>
 between the date stamp and time stamp. That is:
