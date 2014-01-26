@@ -1,3 +1,22 @@
+2.022000 - 2014-01-26
+
+  [NEW FEATURES]
+
+  * Support for Link Aggregation (port-channel, etherchannel, "trunking", etc)
+  * [#68] Devices orphaned by missing topology info report 
+
+  [ENHANCEMENTS]
+
+  * [#82] Check /etc/hosts before DNS when doing arp entry name lookup
+  * [#59] Arpnip tries to resolve link local IPv6 addresses 
+
+  [BUG FIXES]
+
+  * [#85] device property in _no/_only fails with error (R. Kerr)
+  * Also prefer port filter when linking to connected devices
+  * Fix SQL logic in PortMAC.pm (imperfectus)
+  * Fix snmpv3 autovivication bug setting priv strings (LT)
+
 2.021001
 
   [NEW FEATURES]
@@ -20,6 +39,7 @@
   * Correct is_discoverable check in Undiscovered Neighbors report
   * Correct macsuck for Q-BRIDGE-MIB based devices
   * Allow cached SNMP community hint to override SNMP version cycle
+  * [#76] Don't include wireless in ports with multiple nodes attached report 
 
 2.021000 - 2014-01-08
 

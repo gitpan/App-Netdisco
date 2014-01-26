@@ -91,8 +91,8 @@ sub check_acl {
           next unless $device->in_storage;
 
           # lazy version of vendor: and model:
-          if ($device->can($prop) and defined $device->prop
-              and $device->prop =~ m/^$match$/) {
+          if ($device->can($prop) and defined $device->$prop
+              and $device->$prop =~ m/^$match$/) {
               return 1;
           }
 

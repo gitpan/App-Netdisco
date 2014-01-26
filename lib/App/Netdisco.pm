@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.021000_004';
+our $VERSION = '2.022000';
 
 BEGIN {
   if (not ($ENV{DANCER_APPDIR} || '')
@@ -152,9 +152,10 @@ will take about 250MB including MIB files.
 
  root:~# useradd -m -p x -s /bin/bash netdisco
 
-Netdisco uses the PostgreSQL database server. Install PostgreSQL and then change
-to the PostgreSQL superuser (usually C<postgres>). Create a new database and
-PostgreSQL user for the Netdisco application:
+Netdisco uses the PostgreSQL database server. Install PostgreSQL (at least
+version 8.4) and then change to the PostgreSQL superuser (usually
+C<postgres>). Create a new database and PostgreSQL user for the Netdisco
+application:
 
  root:~# su - postgres
   
@@ -307,7 +308,7 @@ within the L<Developer|App::Netdisco::Manual::Developing> documentation.
 
 =head1 Caveats
 
-The Wireless, IP Phone and NetBIOS Node properies are not yet shown.
+NetBIOS Node properies are not yet shown.
 
 =head1 AUTHOR
 
