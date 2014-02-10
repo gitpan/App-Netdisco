@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.022000';
+our $VERSION = '2.023000';
 
 BEGIN {
   if (not ($ENV{DANCER_APPDIR} || '')
@@ -79,6 +79,10 @@ setting('plugins')->{DBIC}->{daemon} = {
     schema_class => 'App::Netdisco::Daemon::DB',
 };
 
+# force skipped DNS resolution, if unset
+setting('dns')->{no} ||= ['fe80::/64','169.254.0.0/16'];
+setting('dns')->{hosts_file} ||= '/etc/hosts';
+
 =head1 NAME
 
 App::Netdisco - An open source web-based network management tool.
@@ -134,15 +138,15 @@ Notes|App::Netdisco::Manual::ReleaseNotes>.
 
 Netdisco has several Perl library dependencies which will be automatically
 installed. However it's I<strongly> recommended that you first install
-L<DBD::Pg> and L<SNMP> using your operating system packages. The following
-commands will test for the existence of them on your system:
+L<DBD::Pg>, L<SNMP>, and a compiler using your operating system packages.
 
- perl -MDBD::Pg\ 999
- perl -MSNMP\ 999
+On Ubuntu/Debian:
 
-You'll also need a compiler for some of the other Perl dependencies. For
-example on Ubuntu/Debian, install the C<build-essential> package. On
-Fedora/Red-Hat, install C<make>, C<automake>, and C<gcc>.
+ root:~# apt-get install libdbd-pg-perl libsnmp-perl build-essential
+
+On Fedora/Red-Hat:
+
+ root:~# yum install perl-DBD-Pg net-snmp-perl make automake gcc
 
 With those installed, we can proceed...
 
@@ -187,7 +191,8 @@ Link some of the newly installed apps into a handy location:
  ln -s ~/perl5/bin/{localenv,netdisco-*} ~/bin/
 
 Test the installation by running the following command, which should only
-produce a status message (and throw up no errors):
+produce a status message (it's just a test - you'll start the daemon properly,
+later on):
 
  ~/bin/netdisco-daemon status
 
@@ -200,12 +205,14 @@ template from this distribution:
  cp ~/perl5/lib/perl5/auto/share/dist/App-Netdisco/environments/deployment.yml ~/environments
  chmod +w ~/environments/deployment.yml
 
-Edit the file and change the database connection parameters to match those for
-your local system (that is, the C<name>, C<host>, C<user> and C<pass>).
+Edit the file ("C<~/environments/deployment.yml>") and change the database
+connection parameters to match those for your local system (that is, the
+C<name>, C<host>, C<user> and C<pass>).
 
 In the same file uncomment and edit the C<domain_suffix> setting to be
-appropriate for your local site. Optionally, set the C<no_auth> value to true
-if you wish to skip user authentication in the web interface.
+appropriate for your local site. If this is a fresh install, uncomment and set
+the C<no_auth> value to true (temporarily disables user authentication). Have
+a quick read of the other settings to make sure you're happy, then move on.
 
 =head1 Bootstrap
 
@@ -238,7 +245,7 @@ daemon at the same time. Similarly, if you use the device discovery with
 Netdisco 2, disable your system's cron jobs for the Netdisco 1.x poller.
 
 At this point you can revisit the C<~/environments/deployment.yml> file to
-uncomment more configuration. Check out the community string settings, and
+uncomment more configuration. Enable the C<community> string settings, and
 C<housekeeping> which enables the automatic periodic device discovery. See
 L<Configuration|App::Netdisco::Manual::Configuration> for further details.
 
@@ -306,17 +313,13 @@ See L<App::Netdisco::Web::Plugin> for further information.
 Lots of information about the architecture of this application is contained
 within the L<Developer|App::Netdisco::Manual::Developing> documentation.
 
-=head1 Caveats
-
-NetBIOS Node properies are not yet shown.
-
 =head1 AUTHOR
 
 Oliver Gorwits <oliver@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
  
-This software is copyright (c) 2012, 2013 by The Netdisco Developer Team.
+This software is copyright (c) 2012, 2013, 2014 by The Netdisco Developer Team.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:

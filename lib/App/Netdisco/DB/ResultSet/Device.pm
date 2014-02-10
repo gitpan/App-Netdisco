@@ -204,6 +204,23 @@ sub search_by_field {
         || NetAddr::IP::Lite->new('255.255.255.255') );
     }
 
+    # For Search on Layers
+    my @layer_search = ( '_', '_', '_', '_', '_', '_', '_' );
+    # @layer_search is computer indexed, left->right
+    my $layers = $p->{layers};
+    if ( defined $layers && ref $layers ) {
+      foreach my $layer (@$layers) {
+        next unless defined $layer and length($layer);
+        next if ( $layer < 1 || $layer > 7 );
+        $layer_search[ $layer - 1 ] = 1;
+      }
+    }
+    elsif ( defined $layers ) {
+      $layer_search[ $layers - 1 ] = 1;
+    }
+    # the database field is in order 87654321
+    my $layer_string = join( '', reverse @layer_search );
+
     return $rs
       ->search_rs({}, $attrs)
       ->search({
@@ -214,6 +231,8 @@ sub search_by_field {
             { '-ilike' => "\%$p->{location}\%" }) : ()),
           ($p->{description} ? ('me.description' =>
             { '-ilike' => "\%$p->{description}\%" }) : ()),
+          ($p->{layers} ? ('me.layers' =>
+            { '-ilike' => "\%$layer_string" }) : ()),
 
           ($p->{model} ? ('me.model' =>
             { '-in' => $p->{model} }) : ()),
@@ -464,7 +483,7 @@ sub get_models {
     select => [ 'vendor', 'model', { count => 'ip' } ],
     as => [qw/vendor model count/],
     group_by => [qw/vendor model/],
-    order_by => [{-asc => 'vendor'}, {-desc => 'count'}, {-asc => 'model'}],
+    order_by => [{-asc => 'vendor'}, {-asc => 'model'}],
   })
 
 }
@@ -494,30 +513,9 @@ sub get_releases {
     select => [ 'os', 'os_ver', { count => 'ip' } ],
     as => [qw/os os_ver count/],
     group_by => [qw/os os_ver/],
-    order_by => [{-asc => 'os'}, {-desc => 'count'}, {-asc => 'os_ver'}],
+    order_by => [{-asc => 'os'}, {-asc => 'os_ver'}],
   })
 
-}
-
-=head2 get_distinct_col( $column )
-
-Returns an asciibetical sorted list of the distinct values in the given column
-of the Device table. This is useful for web forms when you want to provide a
-drop-down list of possible options.
-
-=cut
-
-sub get_distinct_col {
-  my ($rs, $col) = @_;
-  return $rs unless $col;
-
-  return $rs->search({},
-    {
-      columns => [$col],
-      order_by => $col,
-      distinct => 1
-    }
-  )->get_column($col)->all;
 }
 
 =head2 with_port_count

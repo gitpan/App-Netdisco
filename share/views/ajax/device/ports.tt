@@ -67,7 +67,7 @@
           data-animation="" data-title="Click to Enable"></i>
       [% END %]
         <a class="nd_log-icon"
-          href="[% uri_for('/admin/portlog') %]?q=[% device.dns || device.ip | uri %]&f=[% row.port | uri %]">
+          href="[% uri_for('/admin/portlog') %]?q=[% device.ip | uri %]&f=[% row.port | uri %]">
           <i class="icon-file-text-alt"
             rel="tooltip" data-placement="top" data-offset="3"
             data-animation="" data-title="View Port Log"></i>
@@ -240,7 +240,7 @@
               <i class="icon-signal"></i>&nbsp;
             [% END %]
             <a href="[% uri_for('/device',
-                  self_options) %]&q=[% row.neighbor.dns || row.neighbor.ip | uri %]&f=[% row.remote_port | uri %]&prefer=port">
+                  self_options) %]&q=[% row.neighbor.ip | uri %]&f=[% row.remote_port | uri %]&prefer=port">
             [% row.neighbor.dns.remove(settings.domain_suffix) || row.neighbor.ip | html_entity %]
             [% ' - ' IF row.remote_port %][% row.remote_port | html_entity %]</a><br/>
             [% IF params.neigh_id and (row.remote_id or row.remote_type) %]
@@ -282,6 +282,13 @@
             [% END %]
             )
           [% END %]
+          [% IF params.n_vendor AND node.oui.defined %]
+            (Vendor:
+            [% FOREACH oui IN node.oui %]
+              [%+ oui.abbrev | html_entity %]
+            [% END %]
+            )
+          [% END %]
           [% ' (' _ node.time_last_age _ ')' IF params.n_age %]
           [% IF params.n_ip %]
             [% FOREACH ip IN node.ips %]
@@ -292,6 +299,12 @@
               [% ELSE %]
               <a href="[% search_node %]&q=[% ip.ip | uri %]">[% ip.ip | html_entity %]</a>
               [% END %]
+            [% END %]
+          [% END %]
+          [% IF params.n_netbios %]
+            [% FOREACH nbt IN node.netbios %]
+            <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\\<a href="[% uri_for('/report/netbios') %]?domain=[% nbt.domain | uri %]" title="Nodes in this Domain">[% nbt.domain | html %]</a>\<a href="[% search_node %]&q=[% nbt.nbname | uri %]">[% nbt.nbname | html_entity %]</a>
+            <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[% nbt.nbuser || '[No User]' | html %]@<a href="[% search_node %]&q=[% nbt.ip | uri %]">[% nbt.ip | html_entity %]</a>
             [% END %]
           [% END %]
         [% END %]

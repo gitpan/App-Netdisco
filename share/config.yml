@@ -43,9 +43,11 @@ web_plugins:
   - Report::HalfDuplex
   - Report::DeviceAddrNoDNS
   - Report::DeviceByLocation
+  - Report::DeviceDnsMismatch
   - Report::DevicePoeStatus
   - Report::DuplexMismatch
   - Report::IpInventory
+  - Report::Netbios
   - Report::NodeMultiIPs
   - Report::PhonesDiscovered
   - Report::SsidInventory
@@ -71,6 +73,8 @@ web_plugins:
   - Device::Neighbors
   - Device::Addresses
 extra_web_plugins: []
+jobqueue_refresh: 5
+safe_password_store: true
 
 # -------------
 # NETDISCO CORE
@@ -107,6 +111,9 @@ snmpforce_v3: []
 arpnip_no: []
 arpnip_only: []
 arpnip_min_age: 0
+nbtstat_no: []
+nbtstat_only: []
+nbtstat_max_age: 7
 expire_devices: 0
 expire_nodes: 0
 expire_nodes_archive: 0
@@ -158,7 +165,8 @@ workers:
   sleep_time: 2
 
 dns:
-  max_outstanding: 250
+  max_outstanding: 10
+  hosts_file: '/etc/hosts'
   no: ['fe80::/64','169.254.0.0/16']
 
 #housekeeping:
@@ -172,6 +180,8 @@ dns:
 #      min: 15
 #      hour: '*/2'
 #      wday: 'mon-fri'
+#   nbtwalk:
+#     when: '0 8,13,21 * * *'
 
 # ---------------
 # DANCER INTERNAL
@@ -192,6 +202,7 @@ plugins:
   Auth::Extensible:
     no_api_change_warning: true
     no_default_pages: true
+    no_login_handler: true
     realms:
       users:
         provider: 'App::Netdisco::Web::Auth::Provider::DBIC'

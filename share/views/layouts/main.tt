@@ -23,6 +23,8 @@
   <script type="text/javascript" src="[% uri_base %]/javascripts/d3.min.js"></script>
   <script type="text/javascript" src="[% uri_base %]/javascripts/toastr.js"></script>
   <script type="text/javascript" src="[% uri_base %]/javascripts/jquery.floatThead.js"></script>
+  <script type="text/javascript" src="[% uri_base %]/javascripts/daterangepicker.js"></script>
+  <script type="text/javascript" src="[% uri_base %]/javascripts/moment.min.js"></script>
 
   <script type="text/javascript">
     var uri_base = '[% uri_base %]';
@@ -103,6 +105,11 @@
               <button type="submit" class="btn btn-link nd_btn-link">Macsuck All</button>
             </form>
           </li>
+          <li>
+            <form method="post" class="nd_inline-form" action="[% uri_for('/admin/nbtwalk') %]">
+              <button type="submit" class="btn btn-link nd_btn-link">Nbtstat All</button>
+            </form>
+          </li>
           [% IF settings._admin_tasks.size %]
             <li class="divider"></li>
             [% FOREACH ai IN settings._admin_order %]
@@ -116,7 +123,7 @@
       </ul>
       <form class="navbar-search pull-left" method="get" action="[% uri_for('/search') %]">
         <input placeholder="Find Anything" class="search-query span3"
-          id="nq" name="q" type="text" autocomplete="off"/>
+          id="nq" name="q" value="[% display_name %]" type="text" autocomplete="off"/>
         <div class="btn-group nd_navbar-search-group">
           <button class="btn btn-inverse nd_navbar-search-icon">
             <span style="font-size: 18px;">

@@ -90,10 +90,6 @@ hook 'after' => sub {
     }
 };
 
-get qr{^/(?:login(?:/denied)?)?} => sub {
-    template 'index';
-};
-
 any qr{.*} => sub {
     var('notfound' => true);
     status 'not_found';
