@@ -1,3 +1,34 @@
+2.024000 - 2014-02-22
+
+  [NEW FEATURES]
+
+  * [#75] Device module inventory report / search
+  * [#70] SSID Search (port)
+  * [#72] Search on Vendor / OUI 
+  * Password Change form for all users
+
+  [ENHANCEMENTS]
+
+  * Kwalitee fixes
+  * Change default number of pollers to 10
+  * Default netmap depth set to 8
+  * Add a "waiting" message to the netmap whilst the data loads
+  * Add a spinner to all waiting messages
+  * Try to make the Job Queue page a little faster
+  * Require the Net::LDAP module for all installs
+  * Move system information to the Netdisco "home" page
+  * Show all subnets (scrollable), and sort, in sidebar Prefix search
+
+  [BUG FIXES]
+
+  * Workaround for https://rt.cpan.org/Ticket/Display.html?id=93244
+  * Fix for crash when selecting Last Change column in device ports view
+  * Fix IP Inventory Report to work without daterange
+  * Fix "list IPs never seen" to work without daterange in IP Inventory Report
+  * Correct "Archive" status of nodes in IP Inventory Report
+  * Do not trigger userlog popups for all/walk jobs
+  * No longer show warning notification when userlog retrieve fails
+
 2.023002 - 2014-02-17
 
   [BUG FIXES]
