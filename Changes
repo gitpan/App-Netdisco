@@ -1,4 +1,15 @@
-2.024001 -
+2.024002 - 2014-02-27
+
+  [NEW FEATURES]
+
+  * User Reports via config, without requiring HTML or Perl
+  * Add netdisco-rancid-export script
+
+  [ENHANCEMENTS]
+
+  * Option to display Port SSID in Device Ports view
+
+2.024001 - 2014-02-25
 
   [BUG FIXES]
 
