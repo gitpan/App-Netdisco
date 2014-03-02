@@ -7,7 +7,7 @@ use 5.010_000;
 use File::ShareDir 'dist_dir';
 use Path::Class;
 
-our $VERSION = '2.024003';
+our $VERSION = '2.024003_001';
 
 BEGIN {
   if (not ($ENV{DANCER_APPDIR} || '')
@@ -203,7 +203,7 @@ template from this distribution:
 
  mkdir ~/environments
  cp ~/perl5/lib/perl5/auto/share/dist/App-Netdisco/environments/deployment.yml ~/environments
- chmod +w ~/environments/deployment.yml
+ chmod 600 ~/environments/deployment.yml
 
 Edit the file ("C<~/environments/deployment.yml>") and change the database
 connection parameters to match those for your local system (that is, the
