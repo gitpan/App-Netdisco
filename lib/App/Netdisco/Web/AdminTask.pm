@@ -13,6 +13,7 @@ my %jobs = map { $_ => 1} qw/
     discover
     macsuck
     arpnip
+    nbtstat
 /;
 my %jobs_all = map {$_ => 1} qw/
     discoverall

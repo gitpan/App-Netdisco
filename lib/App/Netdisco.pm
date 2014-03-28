@@ -1,48 +1,15 @@
 package App::Netdisco;
 
 use strict;
-use warnings FATAL => 'all';
+use warnings;
 use 5.010_000;
 
-use File::ShareDir 'dist_dir';
-use Path::Class;
+our $VERSION = '2.025000_001';
 
-our $VERSION = '2.024004';
-
-BEGIN {
-  if (not ($ENV{DANCER_APPDIR} || '')
-      or not -f file($ENV{DANCER_APPDIR}, 'config.yml')) {
-
-      my $auto = dir(dist_dir('App-Netdisco'))->absolute;
-      my $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
-
-      $ENV{DANCER_APPDIR}  ||= $auto->stringify;
-      $ENV{DANCER_CONFDIR} ||= $auto->stringify;
-
-      my $test_envdir = dir($home, 'environments')->stringify;
-      $ENV{DANCER_ENVDIR} ||= (-d $test_envdir
-        ? $test_envdir : $auto->subdir('environments')->stringify);
-
-      $ENV{DANCER_ENVIRONMENT} ||= 'deployment';
-      $ENV{PLACK_ENV} ||= $ENV{DANCER_ENVIRONMENT};
-
-      $ENV{DANCER_PUBLIC} ||= $auto->subdir('public')->stringify;
-      $ENV{DANCER_VIEWS}  ||= $auto->subdir('views')->stringify;
-  }
-
-  {
-      # Dancer 1 uses the broken YAML.pm module
-      # This is a global sledgehammer - could just apply to Dancer::Config
-      use YAML;
-      use YAML::XS;
-      no warnings 'redefine';
-      *YAML::LoadFile = sub { goto \&YAML::XS::LoadFile };
-  }
-}
-
-# set up database schema config from simple config vars
+use App::Netdisco::Environment;
 use Dancer ':script';
 
+# set up database schema config from simple config vars
 if (ref {} eq ref setting('database')) {
     my $name = (setting('database')->{name} || 'netdisco');
     my $host = setting('database')->{host};
@@ -82,6 +49,10 @@ setting('plugins')->{DBIC}->{daemon} = {
 # force skipped DNS resolution, if unset
 setting('dns')->{no} ||= ['fe80::/64','169.254.0.0/16'];
 setting('dns')->{hosts_file} ||= '/etc/hosts';
+
+# housekeeping expire used to be called expiry
+setting('housekeeping')->{expire} ||= setting('housekeeping')->{expiry}
+  if exists setting('housekeeping')->{expiry};
 
 =head1 NAME
 
@@ -146,7 +117,7 @@ On Ubuntu/Debian:
 
 On Fedora/Red-Hat:
 
- root:~# yum install perl-DBD-Pg net-snmp-perl make automake gcc
+ root:~# yum install perl-core perl-DBD-Pg net-snmp-perl make automake gcc
 
 With those installed, we can proceed...
 
