@@ -1,4 +1,4 @@
-2.025000_001 - 2014-03-28
+2.025001 - 2014-04-08
 
   [NEW FEATURES]
 
@@ -13,6 +13,7 @@
   * Clean up library path fiddling across all scripts
   * Rename housekeeping expiry task to be expire
   * Refactor nbtstat to group probes by device where node was arped
+  * Add note about pgtune to install docs
 
   [BUG FIXES]
 
@@ -20,6 +21,7 @@
   * FATAL warnings considered harmful
   * Only show STP blocked icon if port is UP
   * Store device model and serial via UTF8 conversion
+  * Only set housekeeping default if user has enabled
 
 2.024004 - 2014-03-04
 
