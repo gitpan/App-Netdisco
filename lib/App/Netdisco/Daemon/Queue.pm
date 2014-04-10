@@ -23,7 +23,7 @@ sub capacity_for {
 
   my $action_map = {
       Poller => [
-          qw/discoverall discover arpwalk arpnip macwalk macsuck nbtstat nbtwalk expire/
+          qw/discoverall discover arpwalk arpnip macwalk macsuck nbtstat nbtwalk expiry/
       ],
       Interactive => [qw/location contact portcontrol portname vlan power/],
   };

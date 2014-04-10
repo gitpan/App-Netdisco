@@ -5,6 +5,7 @@ use Dancer::Plugin::DBIC;
 use Dancer::Plugin::Auth::Extensible;
 
 use App::Netdisco::Web::Plugin;
+use App::Netdisco::Util::Web (); # for interval_to_daterange
 
 register_report({
   category     => 'IP',
@@ -15,22 +16,19 @@ register_report({
 
 get '/ajax/content/report/subnets' => require_login sub {
     my $subnet = param('subnet') || '0.0.0.0/32';
-    my $agenot = param('age_invert') || '0';
-    my ( $start, $end ) = param('daterange') =~ /(\d+-\d+-\d+)/gmx;
+    my $age = param('age') || '7 days';
+    $age = '7 days' unless $age =~ m/^(?:\d+)\s+(?:day|week|month|year)s?$/;
 
-    if ($agenot) {
-        my $tmp = $end;
-        $end = $start;
-        $start = $tmp;
-    }
+    my $daterange = App::Netdisco::Util::Web::interval_to_daterange($age);
 
     my $set = schema('netdisco')->resultset('Virtual::SubnetUtilization')
       ->search(undef,{
-        bind => [ $subnet, $start, $end, $end, $subnet, $end, $end ],
+        bind => [ $subnet, $age, $age, $subnet, $age, $age ],
       });
 
     if ( request->is_ajax ) {
-        template 'ajax/report/subnets.tt', { results => $set },
+        template 'ajax/report/subnets.tt',
+            { results => $set, daterange => $daterange },
             { layout => undef };
     }
     else {

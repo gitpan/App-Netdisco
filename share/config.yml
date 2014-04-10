@@ -175,17 +175,17 @@ dns:
 
 #housekeeping:
 #  discoverall:
-#    when: '5 7 * * *'
-#  macwalk:
-#    when:
-#      min: 20
+#    when: '0 9 * * *'
 #  arpwalk:
 #    when:
-#      min: 50
-#  nbtwalk:
-#    when: '0 8,13,21 * * *'
-#  expire:
-#    when: '20 23 * * *'
+#      min: 30
+#  macwalk:
+#    when:
+#      min: 15
+#      hour: '*/2'
+#      wday: 'mon-fri'
+#   nbtwalk:
+#     when: '0 8,13,21 * * *'
 
 # ---------------
 # DANCER INTERNAL

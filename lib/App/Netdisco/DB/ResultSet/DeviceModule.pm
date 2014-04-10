@@ -2,7 +2,7 @@ package App::Netdisco::DB::ResultSet::DeviceModule;
 use base 'App::Netdisco::DB::ResultSet';
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 
 =head1 ADDITIONAL METHODS
 

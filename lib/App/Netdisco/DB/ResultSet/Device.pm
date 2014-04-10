@@ -2,7 +2,7 @@ package App::Netdisco::DB::ResultSet::Device;
 use base 'App::Netdisco::DB::ResultSet';
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 use NetAddr::IP::Lite ':lower';
 
 =head1 ADDITIONAL METHODS

@@ -1,15 +1,48 @@
 package App::Netdisco;
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 use 5.010_000;
 
-our $VERSION = '2.025001';
+use File::ShareDir 'dist_dir';
+use Path::Class;
 
-use App::Netdisco::Environment;
-use Dancer ':script';
+our $VERSION = '2.026000';
+
+BEGIN {
+  if (not ($ENV{DANCER_APPDIR} || '')
+      or not -f file($ENV{DANCER_APPDIR}, 'config.yml')) {
+
+      my $auto = dir(dist_dir('App-Netdisco'))->absolute;
+      my $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
+
+      $ENV{DANCER_APPDIR}  ||= $auto->stringify;
+      $ENV{DANCER_CONFDIR} ||= $auto->stringify;
+
+      my $test_envdir = dir($home, 'environments')->stringify;
+      $ENV{DANCER_ENVDIR} ||= (-d $test_envdir
+        ? $test_envdir : $auto->subdir('environments')->stringify);
+
+      $ENV{DANCER_ENVIRONMENT} ||= 'deployment';
+      $ENV{PLACK_ENV} ||= $ENV{DANCER_ENVIRONMENT};
+
+      $ENV{DANCER_PUBLIC} ||= $auto->subdir('public')->stringify;
+      $ENV{DANCER_VIEWS}  ||= $auto->subdir('views')->stringify;
+  }
+
+  {
+      # Dancer 1 uses the broken YAML.pm module
+      # This is a global sledgehammer - could just apply to Dancer::Config
+      use YAML;
+      use YAML::XS;
+      no warnings 'redefine';
+      *YAML::LoadFile = sub { goto \&YAML::XS::LoadFile };
+  }
+}
 
 # set up database schema config from simple config vars
+use Dancer ':script';
+
 if (ref {} eq ref setting('database')) {
     my $name = (setting('database')->{name} || 'netdisco');
     my $host = setting('database')->{host};
@@ -49,10 +82,6 @@ setting('plugins')->{DBIC}->{daemon} = {
 # force skipped DNS resolution, if unset
 setting('dns')->{no} ||= ['fe80::/64','169.254.0.0/16'];
 setting('dns')->{hosts_file} ||= '/etc/hosts';
-
-# housekeeping expire used to be called expiry
-setting('housekeeping')->{expire} ||= setting('housekeeping')->{expiry}
-  if setting('housekeeping') and exists setting('housekeeping')->{expiry};
 
 =head1 NAME
 
@@ -117,7 +146,7 @@ On Ubuntu/Debian:
 
 On Fedora/Red-Hat:
 
- root:~# yum install perl-core perl-DBD-Pg net-snmp-perl make automake gcc
+ root:~# yum install perl-DBD-Pg net-snmp-perl make automake gcc
 
 With those installed, we can proceed...
 
@@ -140,18 +169,6 @@ application:
   
  postgres:~$ createdb -O netdisco netdisco
 
-The default PostgreSQL configuration isn't well tuned for modern server
-hardware. We strongly recommend that you use the C<pgtune> Python program to
-auto-tune your C<postgresql.conf> file:
-
-=over 4
-
-=item *
-
-L<https://github.com/elitwin/pgtune>
-
-=back
-
 =head1 Installation
 
 The following is a general guide which works well in most circumstances. It
@@ -166,7 +183,7 @@ install Netdisco and its dependencies into the C<netdisco> user's home area
 (C<~netdisco/perl5>):
 
  su - netdisco
- curl -L http://cpanmin.us/ | perl - --notest --local-lib ~/perl5 App::Netdisco
+ curl -L http://cpanmin.us/ | perl - --notest --verbose --local-lib ~/perl5 App::Netdisco
 
 Link some of the newly installed apps into a handy location:
 
@@ -190,18 +207,12 @@ template from this distribution:
 
 Edit the file ("C<~/environments/deployment.yml>") and change the database
 connection parameters to match those for your local system (that is, the
-C<name>, C<user> and C<pass>).
+C<name>, C<host>, C<user> and C<pass>).
 
 In the same file uncomment and edit the C<domain_suffix> setting to be
-appropriate for your local site.
-
-Change the C<community> string setting if your site has different values, and
-uncomment the C<housekeeping> setting to enable SNMP data gathering from
-devices (this replaces cron jobs in Netdisco 1).
-
-Have a quick read of the other settings to make sure you're happy, then move
-on. See L<Configuration|App::Netdisco::Manual::Configuration> for further
-details.
+appropriate for your local site. If this is a fresh install, uncomment and set
+the C<no_auth> value to true (temporarily disables user authentication). Have
+a quick read of the other settings to make sure you're happy, then move on.
 
 =head1 Bootstrap
 
@@ -212,7 +223,7 @@ take care of all this for you:
 
  ~/bin/netdisco-deploy
 
-If this is a new installation of Netdisco 2, answer yes to all questions.
+Answer yes to all questions, if this is a new installation of Netdisco 2.
 
 =head1 Startup
 
@@ -221,6 +232,10 @@ Run the following command to start the web-app server as a backgrounded daemon
 
  ~/bin/netdisco-web start
 
+If the Inventory is empty because this is a new installation, you probably
+want to run some polling jobs. This can be done from from the web interface or
+command-line (see L<netdisco-do>).
+
 Run the following command to start the job control daemon (port control, etc):
 
  ~/bin/netdisco-daemon start
@@ -228,6 +243,11 @@ Run the following command to start the job control daemon (port control, etc):
 You should take care not to run this Netdisco daemon and the Netdisco 1.x
 daemon at the same time. Similarly, if you use the device discovery with
 Netdisco 2, disable your system's cron jobs for the Netdisco 1.x poller.
+
+At this point you can revisit the C<~/environments/deployment.yml> file to
+uncomment more configuration. Enable the C<community> string settings, and
+C<housekeeping> which enables the automatic periodic device discovery. See
+L<Configuration|App::Netdisco::Manual::Configuration> for further details.
 
 =head1 Upgrading
 

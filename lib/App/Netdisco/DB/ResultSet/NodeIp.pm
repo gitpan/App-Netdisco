@@ -2,7 +2,7 @@ package App::Netdisco::DB::ResultSet::NodeIp;
 use base 'App::Netdisco::DB::ResultSet';
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 
 __PACKAGE__->load_components(qw/
   +App::Netdisco::DB::ExplicitLocking
@@ -212,7 +212,7 @@ sub ip_version {
     die "ip_version input must be either 4 or 6\n"
         unless $version && ( $version == 4 || $version == 6 );
 
-    return $rs->search_rs( \[ 'family(me.ip) = ?', $version ] );
+    return $rs->search_rs( \[ 'family(ip) = ?', $version ] );
 }
 
 1;

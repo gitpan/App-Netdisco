@@ -1,7 +1,7 @@
 package App::Netdisco::DB::ExplicitLocking;
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 
 our %lock_modes;
 

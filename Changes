@@ -1,28 +1,3 @@
-2.025001 - 2014-04-08
-
-  [NEW FEATURES]
-
-  * Web and Backend daemons will restart when deployment.yml is updated
-  * Web and Backend daemons will drop privilege to same uid/gid as their
-    on-disk files (to allow run-control symlink as non-root)
-
-  [ENHANCEMENTS]
-
-  * Use daterange for IP Subnets (same as IP Inventory)
-  * Run daemons as target binary's owning user (supports run control)
-  * Clean up library path fiddling across all scripts
-  * Rename housekeeping expiry task to be expire
-  * Refactor nbtstat to group probes by device where node was arped
-  * Add note about pgtune to install docs
-
-  [BUG FIXES]
-
-  * Suggest installation of perl-core RPM (arguably Red Hat's bug not ours!)
-  * FATAL warnings considered harmful
-  * Only show STP blocked icon if port is UP
-  * Store device model and serial via UTF8 conversion
-  * Only set housekeeping default if user has enabled
-
 2.024004 - 2014-03-04
 
   [BUG FIXES]

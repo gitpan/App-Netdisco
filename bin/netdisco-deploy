@@ -1,15 +1,11 @@
 #!/usr/bin/env perl
 
-use strict;
-use warnings;
-
-our $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
+our $home;
 
 BEGIN {
-  use FindBin;
-  FindBin::again();
+  # try really hard to find a localenv if one isn't already in place.
+  $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
 
-  # try to find a localenv if one isn't already in place.
   if (!exists $ENV{PERL_LOCAL_LIB_ROOT}) {
       use File::Spec;
       my $localenv = File::Spec->catfile($FindBin::RealBin, 'localenv');
@@ -20,16 +16,22 @@ BEGIN {
       die "Sorry, can't find libs required for App::Netdisco.\n"
         if !exists $ENV{PERLBREW_PERL};
   }
+}
 
-  use Path::Class;
+use FindBin;
+FindBin::again();
+use Path::Class;
 
+BEGIN {
   # stuff useful locations into @INC and $PATH
+  my $location = $FindBin::RealBin;
+
   unshift @INC,
-    dir($FindBin::RealBin)->parent->subdir('lib')->stringify,
-    dir($FindBin::RealBin, 'lib')->stringify;
+    dir($location)->parent->subdir('lib')->stringify,
+    dir($location, 'lib')->stringify;
 
   use Config;
-  $ENV{PATH} = $FindBin::RealBin . $Config{path_sep} . $ENV{PATH};
+  $ENV{PATH} = $location . $Config{path_sep} . $ENV{PATH};
 }
 
 use App::Netdisco;
@@ -37,7 +39,7 @@ use Dancer ':script';
 use Dancer::Plugin::DBIC 'schema';
 use Dancer::Plugin::Passphrase;
 
-info "App::Netdisco $App::Netdisco::VERSION loaded.";
+info "App::Netdisco version $App::Netdisco::VERSION loaded.";
 
 use 5.010_000;
 use Term::UI;

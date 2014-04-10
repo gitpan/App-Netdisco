@@ -15,7 +15,7 @@ my $jobactions = {
       arpwalk
       macwalk
       nbtwalk
-      expire
+      expiry
   /
 #    saveconfigs
 #    backup
