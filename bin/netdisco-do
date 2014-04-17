@@ -1,11 +1,17 @@
 #!/usr/bin/env perl
 
+use strict;
+use warnings;
+
 our $home;
 
 BEGIN {
-  # try to find a localenv if one isn't already in place.
+  use FindBin;
+  FindBin::again();
+
   $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
 
+  # try to find a localenv if one isn't already in place.
   if (!exists $ENV{PERL_LOCAL_LIB_ROOT}) {
       use File::Spec;
       my $localenv = File::Spec->catfile($FindBin::RealBin, 'localenv');
@@ -16,14 +22,10 @@ BEGIN {
       die "Sorry, can't find libs required for App::Netdisco.\n"
         if !exists $ENV{PERLBREW_PERL};
   }
-}
 
-use FindBin;
-FindBin::again();
-use Path::Class 'dir';
+  use Path::Class;
 
-BEGIN {
-  # stuff useful locations into @INC
+  # stuff useful locations into @INC and $PATH
   unshift @INC,
     dir($FindBin::RealBin)->parent->subdir('lib')->stringify,
     dir($FindBin::RealBin, 'lib')->stringify;
