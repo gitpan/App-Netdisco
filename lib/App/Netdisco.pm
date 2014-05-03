@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.010_000;
 
-our $VERSION = '2.026001_004';
+our $VERSION = '2.027001';
 
 use App::Netdisco::Environment;
 use Dancer ':script';
@@ -24,7 +24,7 @@ if (ref {} eq ref setting('database')) {
     setting('plugins')->{DBIC}->{netdisco} ||= {
         dsn  => $dsn,
         user => $user,
-        pass => $pass,
+        password => $pass,
         options => {
             AutoCommit => 1,
             RaiseError => 1,
@@ -246,6 +246,9 @@ Notes|App::Netdisco::Manual::ReleaseNotes>. Then, the process is as follows:
  # restart job daemon (if you use it)
  ~/bin/netdisco-daemon restart
 
+For further documentation on deployment, see
+L<Deployment|App::Netdisco::Manual::Deployment>.
+
 =head1 Tips and Tricks
 
 =head2 Searching
@@ -269,12 +272,6 @@ database (and edited in the web interface). To import a legacy topology file,
 run:
 
  ~/bin/localenv nd-import-topology /path/to/netdisco-topology.txt
-
-=head2 Deployment Scenarios
-
-More documentation on how to deploy the application in other scenarios, for
-example behind a web proxy, is in the
-L<Deployment|App::Netdisco::Manual::Deployment> documentation.
 
 =head2 Database API
 
