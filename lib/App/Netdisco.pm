@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.010_000;
 
-our $VERSION = '2.027001';
+our $VERSION = '2.027002';
 
 use App::Netdisco::Environment;
 use Dancer ':script';
@@ -24,7 +24,7 @@ if (ref {} eq ref setting('database')) {
     setting('plugins')->{DBIC}->{netdisco} ||= {
         dsn  => $dsn,
         user => $user,
-        password => $pass,
+        pass => $pass,
         options => {
             AutoCommit => 1,
             RaiseError => 1,
@@ -229,6 +229,9 @@ You should take care not to run this Netdisco daemon and the Netdisco 1.x
 daemon at the same time. Similarly, if you use the device discovery with
 Netdisco 2, disable your system's cron jobs for the Netdisco 1.x poller.
 
+For further documentation on deployment, see
+L<Deployment|App::Netdisco::Manual::Deployment>.
+
 =head1 Upgrading
 
 Before upgrading please review the latest L<Release
@@ -245,9 +248,6 @@ Notes|App::Netdisco::Manual::ReleaseNotes>. Then, the process is as follows:
  
  # restart job daemon (if you use it)
  ~/bin/netdisco-daemon restart
-
-For further documentation on deployment, see
-L<Deployment|App::Netdisco::Manual::Deployment>.
 
 =head1 Tips and Tricks
 
