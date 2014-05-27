@@ -1,4 +1,4 @@
-[% IF NOT results.size %]
+[% IF NOT results.has_rows %]
 <div class="span2 alert alert-info">The job queue is empty.</div>
 [% ELSE %]
 <table class="table table-bordered table-condensed table-hover nd_floatinghead">
@@ -17,7 +17,7 @@
     </tr>
   </thead>
   </tbody>
-    [% FOREACH row IN results %]
+    [% WHILE (row = results.next) %]
     <tr
       [% ' class="nd_jobqueueitem success"' IF row.status == 'done' %]
       [% ' class="nd_jobqueueitem error"'   IF row.status == 'error' %]

@@ -1,12 +1,12 @@
 package App::Netdisco::Daemon::Worker::Poller::Device;
 
 use Dancer qw/:moose :syntax :script/;
+use Dancer::Plugin::DBIC 'schema';
 
 use App::Netdisco::Util::SNMP 'snmp_connect';
 use App::Netdisco::Util::Device qw/get_device is_discoverable/;
 use App::Netdisco::Core::Discover ':all';
 use App::Netdisco::Daemon::Util ':all';
-use Dancer::Plugin::DBIC 'schema';
 
 use NetAddr::IP::Lite ':lower';
 
@@ -17,19 +17,27 @@ use namespace::clean;
 sub discoverall {
   my ($self, $job) = @_;
 
-  my %queued = map {$_ => 1} $self->jq_queued('discover');
-  my @devices = schema('netdisco')->resultset('Device')
-    ->get_column('ip')->all;
-  my @filtered_devices = grep {!exists $queued{$_}} @devices;
+  my $jobqueue = schema('netdisco')->resultset('Admin');
+  my $devices = schema('netdisco')->resultset('Device')
+    ->search({ip => { -not_in =>
+        $jobqueue->search({
+          device => { '!=' => undef},
+          action => 'discover',
+          status => { -like => 'queued%' },
+        })->get_column('device')->as_query
+    }})->get_column('ip');
 
-  $self->jq_insert([
+  schema('netdisco')->resultset('Admin')->txn_do_locked(sub {
+    $jobqueue->populate([
       map {{
           device => $_,
           action => 'discover',
+          status => 'queued',
           username => $job->username,
           userip => $job->userip,
-      }} (@filtered_devices)
-  ]);
+      }} ($devices->all)
+    ]);
+  });
 
   return job_done("Queued discover job for all devices");
 }
@@ -40,6 +48,7 @@ sub discover {
 
   my $host = NetAddr::IP::Lite->new($job->device);
   my $device = get_device($host->addr);
+  my $jobqueue = schema('netdisco')->resultset('Admin');
 
   if ($device->ip eq '0.0.0.0') {
       return job_error("discover failed: no device param (need -d ?)");
@@ -71,20 +80,26 @@ sub discover {
   # if requested, and the device has not yet been arpniped/macsucked, queue now
   if ($device->in_storage and $job->subaction and $job->subaction eq 'with-nodes') {
       if (!defined $device->last_macsuck) {
-          $self->jq_insert({
+          schema('netdisco')->txn_do(sub {
+            $jobqueue->create({
               device => $device->ip,
               action => 'macsuck',
+              status => 'queued',
               username => $job->username,
               userip => $job->userip,
+            });
           });
       }
 
       if (!defined $device->last_arpnip) {
-          $self->jq_insert({
+          schema('netdisco')->txn_do(sub {
+            $jobqueue->create({
               device => $device->ip,
               action => 'arpnip',
+              status => 'queued',
               username => $job->username,
               userip => $job->userip,
+            });
           });
       }
   }

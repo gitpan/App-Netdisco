@@ -1,14 +1,8 @@
-2.027005_001 - 2014-05-21
-
-  [ENHANCEMENTS]
-
-  * Support offline update of oui.txt and MIBs bundle
-  * Support Dancer::Debug at runtime with DANCER_DEBUG=1 env var
-  * Merge pluggable job queue branch
+2.027006 - 2014-05-27
 
   [BUG FIXES]
 
-  * Improve VLAN Inventory performance and show all VLANs (C. Stromsoe)
+  * fix another bug in call to Daemon::Contol redirect_filehandles
 
 2.027004 - 2014-05-15
 

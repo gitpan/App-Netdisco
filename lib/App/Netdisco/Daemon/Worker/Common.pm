@@ -1,61 +1,87 @@
 package App::Netdisco::Daemon::Worker::Common;
 
 use Dancer qw/:moose :syntax :script/;
+use Dancer::Plugin::DBIC 'schema';
 use Try::Tiny;
 
 use Role::Tiny;
 use namespace::clean;
 
-with 'App::Netdisco::Daemon::JobQueue';
+requires qw/worker_type worker_name munge_action/;
 
 sub worker_body {
   my $self = shift;
   my $wid = $self->wid;
 
-  my $tag  = $self->worker_tag;
   my $type = $self->worker_type;
+  my $name = $self->worker_name;
 
   while (1) {
-      my $jobs = $self->jq_take($self->wid, $type);
+      debug "$type ($wid): asking for a job";
+      my $jobs = $self->do('take_jobs', $self->wid, $name);
 
-      foreach my $job (@$jobs) {
+      foreach my $candidate (@$jobs) {
+          # create a row object so we can use column accessors
+          # use the local db schema in case it is accidentally 'stored'
+          # (will throw an exception)
+          my $job = schema('daemon')->resultset('Admin')
+                      ->new_result($candidate);
+          my $jid = $job->job;
+
           my $target = $self->munge_action($job->action);
+          next unless $self->can($target);
+          debug "$type ($wid): can ${target}() for job $jid";
 
+          # do job
+          my ($status, $log);
           try {
               $job->started(scalar localtime);
-              info sprintf "$tag (%s): starting %s job(%s) at %s",
-                $wid, $target, $job->id, $job->started;
-              my ($status, $log) = $self->$target($job);
-              $job->status($status);
-              $job->log($log);
+              info sprintf "$type (%s): starting %s job(%s) at %s",
+                $wid, $target, $jid, $job->started;
+              ($status, $log) = $self->$target($job);
           }
           catch {
-              $job->status('error');
-              $job->log("error running job: $_");
-              $self->sendto('stderr', $job->log ."\n");
+              $status = 'error';
+              $log = "error running job: $_";
+              $self->sendto('stderr', $log ."\n");
           };
 
-          $self->close_job($job);
+          $self->close_job($job, $status, $log);
       }
+
+      debug "$type ($wid): sleeping now...";
+      sleep(1);
   }
 }
 
 sub close_job {
-  my ($self, $job) = @_;
-  my $tag = $self->worker_tag;
+  my ($self, $job, $status, $log) = @_;
+  my $type = $self->worker_type;
   my $now = scalar localtime;
 
-  info sprintf "$tag (%s): wrapping up %s job(%s) - status %s at %s",
-    $self->wid, $job->action, $job->id, $job->status, $now;
+  info sprintf "$type (%s): wrapping up %s job(%s) - status %s at %s",
+    $self->wid, $job->action, $job->job, $status, $now;
 
+  # lock db row and either defer or complete the job
   try {
-      if ($job->status eq 'defer') {
-          $self->jq_defer($job);
+      if ($status eq 'defer') {
+          schema('netdisco')->resultset('Admin')
+            ->find($job->job, {for => 'update'})
+            ->update({ status => 'queued' });
       }
       else {
-          $job->finished($now);
-          $self->jq_complete($job);
+          schema('netdisco')->resultset('Admin')
+            ->find($job->job, {for => 'update'})
+            ->update({
+              status => $status,
+              log => $log,
+              started => $job->started,
+              finished => $now,
+            });
       }
+
+      # remove job from local queue
+      $self->do('scrub_jobs', $self->wid);
   }
   catch { $self->sendto('stderr', "error closing job: $_\n") };
 }
