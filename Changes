@@ -1,3 +1,27 @@
+2.027008_001 - 2014-06-23
+
+  [NEW FEATURES]
+
+  * HTML tables now use DataTables, table plug-in for jQuery, to support
+    pagination, results filtering, and multi-column ordering
+
+  [ENHANCEMENTS]
+
+  * Ignore devices with "phone" in their CDP/LLDP platform description
+  * Change log format to contain UTC timestamp
+  * Link to VLAN search by name from VLAN Inventory report
+  * Neighbor device links to both device and port (fragfutter)
+  * Optimization of multiple SQL queries to improve report performance
+  * VendorMap and Delimiter enhancements to RANCID generator (LesB)
+
+  [BUG FIXES]
+
+  * Fix for device counts in VLAN Inventory report
+  * Forward port housekeeping/schedule and expiry/expire legacy config
+  * Store started timestamp on job completion
+  * Set UTF-8 mode on Pg database connection
+  * Add netdisco-rancid-export to installed scripts
+
 2.027007 - 2014-05-27
 
   [BUG FIXES]
@@ -9,6 +33,30 @@
   [BUG FIXES]
 
   * fix another bug in call to Daemon::Contol redirect_filehandles
+
+2.027005_002 - 2014-05-22
+
+  [ENHANCEMENTS]
+
+  * Increase default snmptimeout from 1 to 3 seconds
+  * Add documentation note about non-standard pg port
+
+  [BUG FIXES]
+
+  * Unrouted VLAN interfaces have numbers on Cisco - ignore them
+  * fix undefined key in Discover
+
+2.027005_001 - 2014-05-21
+
+  [ENHANCEMENTS]
+
+  * Support offline update of oui.txt and MIBs bundle
+  * Support Dancer::Debug at runtime with DANCER_DEBUG=1 env var
+  * Merge pluggable job queue branch
+
+  [BUG FIXES]
+
+  * Improve VLAN Inventory performance and show all VLANs (C. Stromsoe)
 
 2.027004 - 2014-05-15
 

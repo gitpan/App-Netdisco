@@ -5,6 +5,7 @@ use Dancer::Plugin::DBIC 'schema';
 
 use App::Netdisco::Util::Device qw/get_device is_discoverable/;
 use App::Netdisco::Util::DNS ':all';
+use App::Netdisco::JobQueue qw/jq_queued jq_insert/;
 use NetAddr::IP::Lite ':lower';
 use List::MoreUtils ();
 use Encode;
@@ -651,13 +652,13 @@ sub store_neighbors {
   my $c_cap      = $snmp->c_cap;
 
   foreach my $entry (List::MoreUtils::uniq( (keys %$c_ip), (keys %$c_cap) )) {
-      my $port = $interfaces->{ $c_if->{$entry} };
-      if (!defined $port) {
+      if (!defined $c_if->{$entry} or !defined $interfaces->{ $c_if->{$entry} }) {
           debug sprintf ' [%s] neigh - port for IID:%s not resolved, skipping',
             $device->ip, $entry;
           next;
       }
 
+      my $port = $interfaces->{ $c_if->{$entry} };
       my $portrow = schema('netdisco')->resultset('DevicePort')
           ->single({ip => $device->ip, port => $port});
 
@@ -900,20 +901,12 @@ sub discover_new_neighbors {
           next;
       }
 
-      # Don't queued if job already exists
-      my $is_queued = schema('netdisco')->resultset('Admin')->search(
-          {   device => $ip,
+      # Don't queue if job already exists
+      if (List::MoreUtils::none {$_ eq $ip} jq_queued('discover')) {
+          jq_insert({
+              device => $ip,
               action => 'discover',
-              status => { -like => 'queued%' },
-          }
-      )->single;
-      unless ($is_queued) {
-          schema('netdisco')->resultset('Admin')->create(
-              {   device => $ip,
-                  action => 'discover',
-                  status => 'queued',
-              }
-          );
+          });
       }
   }
 }

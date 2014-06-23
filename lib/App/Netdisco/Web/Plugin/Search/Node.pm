@@ -66,6 +66,7 @@ ajax '/ajax/content/search/node' => require_login sub {
           order_by => {'-desc' => 'time_last'},
           '+columns' => [
             'oui.company',
+            'oui.abbrev',
             { time_first_stamp => \"to_char(time_first, 'YYYY-MM-DD HH24:MI')" },
             { time_last_stamp =>  \"to_char(time_last, 'YYYY-MM-DD HH24:MI')" },
           ],
@@ -77,6 +78,7 @@ ajax '/ajax/content/search/node' => require_login sub {
           order_by => {'-desc' => 'time_last'},
           '+columns' => [
             'oui.company',
+            'oui.abbrev',
             { time_first_stamp => \"to_char(time_first, 'YYYY-MM-DD HH24:MI')" },
             { time_last_stamp =>  \"to_char(time_last, 'YYYY-MM-DD HH24:MI')" },
           ],
@@ -90,9 +92,12 @@ ajax '/ajax/content/search/node' => require_login sub {
         { -and => [@where_mac] },
         { order_by   => { '-desc' => 'time_last' },
           '+columns' => [
+            'oui.company',
+            'oui.abbrev',
             {
               time_last_stamp => \"to_char(time_last, 'YYYY-MM-DD HH24:MI')"
-            }]
+            }],
+          join => 'oui'
         }
     );
 

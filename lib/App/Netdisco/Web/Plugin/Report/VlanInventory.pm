@@ -15,28 +15,30 @@ register_report(
 );
 
 get '/ajax/content/report/vlaninventory' => require_login sub {
-    my $set = schema('netdisco')->resultset('DeviceVlan')->search(
-        { 'vlan.description' => { '!=', 'NULL' } },
+    my @results = schema('netdisco')->resultset('DeviceVlan')->search(
+        { 'me.description' => { '!=', 'NULL' } },
         {   join   => { 'ports' => 'vlan' },
             select => [
-                'vlan.vlan',
-                'vlan.description',
-                { count => { distinct => 'ports.ip' } },
+                'me.vlan',
+                'me.description',
+                { count => { distinct => 'me.ip' } },
                 { count => 'ports.vlan' }
             ],
             as       => [qw/ vlan description dcount pcount /],
-            group_by => [qw/ vlan.vlan vlan.description /],
+            group_by => [qw/ me.vlan me.description /],
         }
-    );
-    return unless $set->count;
+    )->hri->all;
+
+    return unless scalar @results;
 
     if ( request->is_ajax ) {
-        template 'ajax/report/vlaninventory.tt', { results => $set, },
+        my $json = to_json (\@results);
+        template 'ajax/report/vlaninventory.tt', { results => $json },
             { layout => undef };
     }
     else {
         header( 'Content-Type' => 'text/comma-separated-values' );
-        template 'ajax/report/vlaninventory_csv.tt', { results => $set, },
+        template 'ajax/report/vlaninventory_csv.tt', { results => \@results },
             { layout => undef };
     }
 };

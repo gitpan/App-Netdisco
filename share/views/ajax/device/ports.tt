@@ -1,5 +1,5 @@
 [% SET user_can_port_control = user_has_role('port_control') %]
-<table class="table table-bordered table-striped nd_floatinghead">
+<table id="dp-data-table" class="table table-bordered table-striped" width="100%" cellspacing="0">
   <thead>
     <tr>
       <th></th>
@@ -7,14 +7,19 @@
       [% NEXT IF item.name == 'c_admin' %]
       [% NEXT IF item.name == 'c_nodes' AND params.c_nodes AND params.c_neighbors %]
         [% NEXT UNLESS params.${item.name} %]
-        <th[% ' class="nd_nudge-for-icon"' IF
-          (user_can_port_control AND params.c_admin AND (item.name == 'c_port' OR item.name == 'c_name')) %]>
+        [% SET th_class = '' %]
+        [% IF (user_can_port_control AND params.c_admin AND (item.name == 'c_port' OR item.name == 'c_name')) %]
+          [% th_class = ' class="nd_nudge-for-icon natural"' %]
+        [% ELSIF (item.name == 'c_port' OR item.name == 'c_descr' OR item.name == 'c_name') %]
+          [% th_class = ' class="natural"' %]
+        [% END %]
+        <th[% th_class %]>
           [% item.label | html_entity %]
         </th>
       [% END %]
     </tr>
   </thead>
-  </tbody>
+  <tbody>
     [% FOREACH row IN results %]
     <tr>
       <td class="nd_center-cell nd_devport-icon">
@@ -243,10 +248,14 @@
             [% ELSIF row.remote_type AND row.remote_type.match('(cisco\s+AIR-[L|C]?AP|-K9W8-|^AP:\s)') %]
               <i class="icon-signal"></i>&nbsp;
             [% END %]
-            <a href="[% uri_for('/device',
-                  self_options) %]&q=[% row.neighbor.ip | uri %]&f=[% row.remote_port | uri %]&prefer=port">
-            [% row.neighbor.dns.remove(settings.domain_suffix) || row.neighbor.ip | html_entity %]
-            [% ' - ' IF row.remote_port %][% row.remote_port | html_entity %]</a><br/>
+            <a href="[% uri_for('/device', self_options) %]&q=[% row.neighbor.ip | uri %]">
+                [% row.neighbor.dns.remove(settings.domain_suffix) || row.neighbor.ip | html_entity %]</a>
+            [% IF row.remote_port %]
+                -
+                <a href="[% uri_for('/device', self_options) %]&q=[% row.neighbor.ip | uri %]&f=[% row.remote_port | uri %]&prefer=port">
+                    [% row.remote_port | html_entity %]</a>
+            [% END %]
+            <br/>
             [% IF params.neigh_id and (row.remote_id or row.remote_type) %]
               ([% 'id: '_ row.remote_id IF row.remote_id %]
               [% ' type: '_ row.remote_type IF row.remote_type %])<br/>
@@ -368,3 +377,22 @@
   </div>
 </div>
 [% END %]
+
+<script>
+$(document).ready(function() {
+    $('#dp-data-table').dataTable({
+        "columnDefs": [
+            { "sortable": false, "targets": 0 },
+            { "searchable": false, "targets": 0 },
+            { "type": 'natural', "targets": [ 'natural' ] }
+        ],
+        "order": [[ 1, 'asc' ]],
+        "processing": true,
+        "stateSave": true,
+        "pageLength": 25,
+        "language": {
+            "search": 'Filter records: '
+        },
+    } );
+} );
+</script>

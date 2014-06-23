@@ -343,8 +343,7 @@ sub search_fuzzy {
 Like C<search()>, this returns a ResultSet of matching rows from the Device
 table.
 
-The returned devices each are aware of the given Vlan and have at least one
-Port configured in the Vlan (either tagged, or not).
+The returned devices each are aware of the given Vlan.
 
 =over 4
 
@@ -371,17 +370,17 @@ sub carrying_vlan {
     die "vlan number required for carrying_vlan\n"
       if ref {} ne ref $cond or !exists $cond->{vlan};
 
-    $cond->{'-and'} ||= [];
-    push @{$cond->{'-and'}}, { 'vlans.vlan' => $cond->{vlan} };
-    push @{$cond->{'-and'}}, { 'port_vlans.vlan' => delete $cond->{vlan} };
-
     return $rs
-      ->search_rs($cond,
+      ->search_rs({ 'vlans.vlan' => $cond->{vlan} },
         {
           order_by => [qw/ me.dns me.ip /],
-          columns => [qw/ me.ip me.dns me.model me.os me.vendor /],
-          join => 'port_vlans',
-          prefetch => 'vlans',
+            columns  => [
+                'me.ip',     'me.dns',
+                'me.model',  'me.os',
+                'me.vendor', 'vlans.vlan',
+                'vlans.description'
+            ],
+            join => 'vlans'
         })
       ->search({}, $attrs);
 }
@@ -393,8 +392,7 @@ sub carrying_vlan {
 Like C<search()>, this returns a ResultSet of matching rows from the Device
 table.
 
-The returned devices each are aware of the named Vlan and have at least one
-Port configured in the Vlan (either tagged, or not).
+The returned devices each are aware of the named Vlan.
 
 =over 4
 
@@ -427,8 +425,13 @@ sub carrying_vlan_name {
     return $rs
       ->search_rs({}, {
         order_by => [qw/ me.dns me.ip /],
-        columns => [qw/ me.ip me.dns me.model me.os me.vendor /],
-        prefetch => 'vlans',
+          columns  => [
+              'me.ip',     'me.dns',
+              'me.model',  'me.os',
+              'me.vendor', 'vlans.vlan',
+              'vlans.description'
+          ],
+          join => 'vlans'
       })
       ->search($cond, $attrs);
 }
@@ -605,98 +608,6 @@ sub delete {
 
   # now let DBIC do its thing
   return $self->next::method();
-}
-
-=head2 with_poestats_as_hashref
-
-This is a modifier for C<search()> which returns a list of hash references
-with the power_modules hash augmented with the following statistics as keys:
-
-=over 4
-
-=item capable_ports
-
-Count of ports which have the ability to supply PoE.
-
-=item disabled_ports
-
-Count of ports with PoE administratively disabled.
-
-=item powered_ports
-
-Count of ports which are delivering power.
-
-=item errored_ports
-
-Count of ports either reporting a fault or in test mode.
-
-=item pwr_committed
-
-Total power that has been negotiated and therefore committed on ports
-actively supplying power.
-
-=item pwr_delivering
-
-Total power as measured on ports actively supplying power.
-
-=back
-
-=cut
-
-sub with_poestats_as_hashref {
-  my ( $rs, $cond, $attrs ) = @_;
-
-  my @return = $rs->search(
-    {},
-    { result_class => 'DBIx::Class::ResultClass::HashRefInflator',
-      prefetch     => { power_modules => 'ports' },
-      order_by     => { -asc => [qw/me.ip power_modules.module/] }
-  })->all;
-
-  my $poemax = {
-    'class0' => 15.4,
-    'class1' => 4.0,
-    'class2' => 7.0,
-    'class3' => 15.4,
-    'class4' => 30.0
-  };
-
-  foreach my $device (@return) {
-    foreach my $module (@{$device->{power_modules}}) {
-      $module->{capable_ports}  = 0;
-      $module->{disabled_ports} = 0;
-      $module->{powered_ports}  = 0;
-      $module->{errored_ports}  = 0;
-      $module->{pwr_committed}  = 0;
-      $module->{pwr_delivering} = 0;
-
-      foreach my $port ( @{$module->{ports}} ) {
-        $module->{capable_ports}++;
-
-        if ( $port->{admin} eq 'false' ) {
-          $module->{disabled_ports}++;
-        }
-        elsif ( $port->{status} ne 'searching'
-                and $port->{status} ne 'deliveringPower' )
-            {
-              $module->{errored_ports}++;
-            }
-        elsif ( $port->{status} eq 'deliveringPower' ) {
-            # Default is class0
-            my $class = $port->{class} || 'class0';
-            $module->{powered_ports}++;
-            if ( defined $port->{power} and $port->{power} ) {
-              $module->{pwr_delivering} += int( $port->{power} / 1000 );
-               $module->{pwr_committed}  += $poemax->{ $class };
-            }
-            else {
-              $module->{pwr_committed} += $poemax->{ $class };
-            }
-          }
-        }
-      }
-    }
-  return \@return;
 }
 
 1;

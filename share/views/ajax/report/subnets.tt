@@ -1,7 +1,5 @@
-[% IF NOT results.has_rows %]
-<div class="span2 alert alert-info">No matching records.</div>
-[% ELSE %]
-<table class="table table-bordered table-condensed table-striped nd_floatinghead">
+[% USE Number.Format %]
+<table id="data-table" class="table table-bordered table-condensed table-hover" width="100%" cellspacing="0">
   <thead>
     <tr>
       <th class="nd_center-cell">Subnet</th>
@@ -11,16 +9,29 @@
     </tr>
   </thead>
   </tbody>
-    [% FOREACH row IN results.all %]
+    [% FOREACH row IN results %]
     <tr>
       <td class="nd_center-cell"><a href="[% uri_for('/report/ipinventory') %]?subnet=[% row.subnet | uri %]&daterange=[% daterange | uri %]&limit=[% row.subnet_size | uri %]">
                [% row.subnet | html_entity %]</a></td>
-      <td class="nd_center-cell">[% row.subnet_size | html_entity %]</td>
-      <td class="nd_center-cell">[% row.active | html_entity %]</td>
+      <td class="nd_center-cell">[% row.subnet_size | format_number %]</td>
+      <td class="nd_center-cell">[% row.active | format_number %]</td>
       <td class="nd_center-cell">[% row.percent | html_entity %]</td>
     </tr>
     [% END %]
   </tbody>
 </table>
-[% END %]
+
+<script>
+$(document).ready(function() {
+  $('#data-table').dataTable({
+    "processing": true,
+    "stateSave": true,
+    "pageLength": 25,
+    "language": {
+      "search": 'Filter records: '
+    },
+    "order": [[ 3, 'desc' ]],
+  } );
+} );
+</script>
 
