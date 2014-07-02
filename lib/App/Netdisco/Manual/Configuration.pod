@@ -67,7 +67,7 @@ backend poller, as this can highlight broken topology.
 
 =head3 C<logger_format>
 
-Value: Format String. Default: C<< '[%P] %L @%D> %m' >>.
+Value: Format String. Default: C<< '[%P] %U %L %m' >>.
 
 Structure of the log messages. See L<Dancer::Logger::Abstract/"logger_format">
 for details.
@@ -88,7 +88,7 @@ Value: Boolean. Default: C<false>.
 
 Enable this to disable login authentication in the web frontend. The username
 will be set to C<guest> so if you want to allow extended permissions (C<admin>
-or C<port_control>, create a dummy user with the appropriate flag in the
+or C<port_control>), create a dummy user with the appropriate flag in the
 database:
 
  netdisco=> insert into users (username) values ('guest');
@@ -293,6 +293,12 @@ Value: Boolean. Default: true.
 
 Set to "C<false>" if you MUST maintain backwards compatibility with the Netdisco
 1.x web interface. Strongly recommended that you leave this set to "C<true>".
+
+=head3 C<table_pagesize>
+
+Value: Number. Default: 10.
+
+The number of rows in a table page.
 
 =head2 Netdisco Core
 
@@ -775,8 +781,7 @@ field to use as the management IP address for a device.
 
 Value: Boolean. Default: C<true>.
 
-Set to false to prevent Netdisco from changing the default VLAN on an
-interface.
+Set to false to prevent users from changing the default VLAN on an interface.
 
 =head3 C<portctl_nophones>
 
