@@ -1,4 +1,22 @@
-2.028006
+2.028008 - 2014-07-22
+
+  [BUG FIXES]
+
+  * Encode NetBIOS name, domain, user as UTF-8
+
+2.028007 - 2014-07-21
+
+  [ENHANCEMENTS]
+
+  * Add 'graph' option to netdisco-do
+
+  [BUG FIXES]
+
+  * DNS Mismatch report incorrectly trimmed domain_suffix
+  * Fake one device aliases entry for devices not providing ip_index
+  * DataTables render function should check for type
+
+2.028006 - 2014-07-21
 
   [ENHANCEMENTS]
 
