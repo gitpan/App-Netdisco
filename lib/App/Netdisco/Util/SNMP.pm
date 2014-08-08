@@ -43,7 +43,7 @@ Returns C<undef> if the connection fails.
 
 =cut
 
-sub snmp_connect { _snmp_connect_generic(@_, 'read') }
+sub snmp_connect { _snmp_connect_generic('read', @_) }
 
 =head2 snmp_connect_rw( $ip )
 
@@ -54,16 +54,17 @@ Returns C<undef> if the connection fails.
 
 =cut
 
-sub snmp_connect_rw { _snmp_connect_generic(@_, 'write') }
+sub snmp_connect_rw { _snmp_connect_generic('write', @_) }
 
 sub _snmp_connect_generic {
-  my ($ip, $mode) = @_;
+  my ($mode, $ip, $useclass) = @_;
   $mode ||= 'read';
 
   # get device details from db
   my $device = get_device($ip);
 
   my %snmp_args = (
+    AutoSpecify => 0,
     DestHost => $device->ip,
     Retries => (setting('snmpretries') || 2),
     Timeout => (setting('snmptimeout') || 1000000),
@@ -74,6 +75,7 @@ sub _snmp_connect_generic {
     MibDirs => [ _build_mibdirs() ],
     IgnoreNetSNMPConf => 1,
     Debug => ($ENV{INFO_TRACE} || 0),
+    DebugSNMP => ($ENV{SNMP_TRACE} || 0),
   );
 
   # an override for bulkwalk
@@ -100,12 +102,9 @@ sub _snmp_connect_generic {
     : (reverse (1 .. (setting('snmpver') || 3))) );
 
   # use existing or new device class
-  my @classes = ('SNMP::Info');
-  if ($device->snmp_class) {
+  my @classes = ($useclass || 'SNMP::Info');
+  if ($device->snmp_class and not $useclass) {
       unshift @classes, $device->snmp_class;
-  }
-  else {
-      $snmp_args{AutoSpecity} = 1;
   }
 
   my $info = undef;
@@ -122,7 +121,8 @@ sub _snmp_connect_generic {
               next unless $class;
 
               my %local_args = (%snmp_args, Version => $ver);
-              $info = _try_connect($device, $class, $comm, $mode, \%local_args);
+              $info = _try_connect($device, $class, $comm, $mode, \%local_args,
+                ($useclass ? 0 : 1) );
               last COMMUNITY if $info;
           }
       }
@@ -132,15 +132,17 @@ sub _snmp_connect_generic {
 }
 
 sub _try_connect {
-  my ($device, $class, $comm, $mode, $snmp_args) = @_;
+  my ($device, $class, $comm, $mode, $snmp_args, $reclass) = @_;
   my %comm_args = _mk_info_commargs($comm);
+  my $debug_comm = ( $comm->{community}
+      ? $ENV{SHOW_COMMUNITY} ? $comm->{community} : '<hidden>'
+      : "v3user:$comm->{user}" );
   my $info = undef;
 
   try {
       debug
         sprintf '[%s] try_connect with ver: %s, class: %s, comm: %s',
-        $snmp_args->{DestHost}, $snmp_args->{Version}, $class,
-        ($comm->{community} || "v3user:$comm->{user}");
+        $snmp_args->{DestHost}, $snmp_args->{Version}, $class, $debug_comm;
       Module::Load::load $class;
 
       $info = $class->new(%$snmp_args, %comm_args);
@@ -148,12 +150,11 @@ sub _try_connect {
                                : _try_write($info, $device, $comm));
 
       # first time a device is discovered, re-instantiate into specific class
-      if ($info and $info->device_type ne $class) {
+      if ($reclass and $info and $info->device_type ne $class) {
           $class = $info->device_type;
           debug
             sprintf '[%s] try_connect with ver: %s, new class: %s, comm: %s',
-            $snmp_args->{DestHost}, $snmp_args->{Version}, $class,
-            ($comm->{community} || "v3user:$comm->{user}");
+            $snmp_args->{DestHost}, $snmp_args->{Version}, $class, $debug_comm;
 
           Module::Load::load $class;
           $info = $class->new(%$snmp_args, %comm_args);
@@ -373,7 +374,7 @@ community indexing, with the given C<$vlan> ID. Works for all SNMP versions.
 
 sub snmp_comm_reindex {
   my ($snmp, $device, $vlan) = @_;
-  my $ver  = $snmp->snmp_ver;
+  my $ver = $snmp->snmp_ver;
 
   if ($ver == 3) {
       my $prefix = '';
@@ -384,10 +385,17 @@ sub snmp_comm_reindex {
           $prefix = $c->{context_prefix} and last;
       }
       $prefix ||= 'vlan-';
+
+      debug
+        sprintf '[%s] reindexing to "%s%s" (ver: %s, class: %s)',
+        $device->ip, $prefix, $vlan, $ver, $snmp->class;
       $snmp->update(Context => ($prefix . $vlan));
   }
   else {
       my $comm = $snmp->snmp_comm;
+
+      debug sprintf '[%s] reindexing to vlan %s (ver: %s, class: %s)',
+        $device->ip, $vlan, $ver, $snmp->class;
       $snmp->update(Community => $comm . '@' . $vlan);
   }
 }

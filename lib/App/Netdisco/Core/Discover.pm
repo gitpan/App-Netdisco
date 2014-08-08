@@ -292,7 +292,7 @@ sub store_interfaces {
           mac          => $i_mac->{$entry},
           speed        => $i_speed->{$entry},
           mtu          => $i_mtu->{$entry},
-          name         => $i_name->{$entry},
+          name         => Encode::decode('UTF-8', $i_name->{$entry}),
           duplex       => $i_duplex->{$entry},
           duplex_admin => $i_duplex_admin->{$entry},
           stp          => $i_stp_state->{$entry},
@@ -666,7 +666,7 @@ sub store_neighbors {
   my $c_platform = $snmp->c_platform;
   my $c_cap      = $snmp->c_cap;
 
-  foreach my $entry (List::MoreUtils::uniq( (keys %$c_ip), (keys %$c_cap) )) {
+  foreach my $entry (sort (List::MoreUtils::uniq( (keys %$c_ip), (keys %$c_cap) ))) {
       if (!defined $c_if->{$entry} or !defined $interfaces->{ $c_if->{$entry} }) {
           debug sprintf ' [%s] neigh - port for IID:%s not resolved, skipping',
             $device->ip, $entry;
@@ -695,11 +695,11 @@ sub store_neighbors {
           my $phone_flag = grep {/phone/i} @$remote_cap;
           my $ap_flag    = grep {/wlanAccessPoint/} @$remote_cap;
 
-          if ($phone_flag or $remote_type =~ m/(mitel.5\d{3})/i) {
+          if ($phone_flag or $remote_type =~ m/mitel.5\d{3}/i) {
               $remote_type = 'IP Phone: '. $remote_type
                 if $remote_type !~ /ip phone/i;
           }
-          elsif ($ap_flag) {
+          elsif ($ap_flag or $remote_type =~ m/\bw?ap\b/i) {
               $remote_type = 'AP: '. $remote_type;
           }
 

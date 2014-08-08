@@ -7,11 +7,17 @@ use FindBin;
 FindBin::again();
 use Path::Class 'dir';
 
+# get a segfault if we load this later
+use if $^O eq 'linux', 'Sys::Proctitle';
+
 BEGIN {
   # stuff useful locations into @INC
   unshift @INC,
     dir($FindBin::RealBin)->parent->subdir('lib')->stringify,
     dir($FindBin::RealBin, 'lib')->stringify;
+
+  unshift @INC,
+    split m/:/, ($ENV{NETDISCO_INC} || '');
 }
 
 use App::Netdisco;
@@ -20,6 +26,7 @@ warning sprintf "App::Netdisco %s backend", ($App::Netdisco::VERSION || 'HEAD');
 
 # local job queue management
 use App::Netdisco::Daemon::LocalQueue ':all';
+use App::Netdisco::Util::Daemon;
 
 # needed to quench AF_INET6 symbol errors
 use NetAddr::IP::Lite ':lower';
@@ -32,6 +39,9 @@ use MCE;
 my $home = ($ENV{NETDISCO_HOME} || $ENV{HOME});
 my $tmp_dir = ($ENV{NETDISCO_TEMP} || dir($home, 'tmp'));
 mkdir $tmp_dir if ! -d $tmp_dir;
+
+setpgrp(0,0); # only portable variety of setpgrp
+prctl 'netdisco-daemon: master';
 
 my $mce = MCE->new(
   spawn_delay => 0.15,
@@ -88,6 +98,7 @@ sub worker_factory {
   return sub {
     my $self = shift;
     my $wid = $self->wid;
+    prctl sprintf 'netdisco-daemon: worker #%s %s: init', $wid, lc($role);
     info "applying role $role to worker $wid";
 
     # $self->sendto('stderr', ">>> worker $wid starting with role $role\n");

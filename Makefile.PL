@@ -11,6 +11,7 @@ requires 'App::cpanminus' => 1.6108;
 requires 'App::local::lib::helper' => 0.07;
 requires 'Archive::Extract' => 0;
 requires 'CGI::Expand' => 2.05;
+requires 'Data::Printer' => 0;
 requires 'DBD::Pg' => 0;
 requires 'DBD::SQLite' => 1.37;
 requires 'DBIx::Class' => 0.08250;
@@ -28,6 +29,7 @@ requires 'HTTP::Tiny' => 0.029;
 requires 'JSON' => 0;
 requires 'List::MoreUtils' => 0.33;
 requires 'MIME::Base64' => 3.13;
+requires 'Module::Find' => 0.12;
 requires 'Module::Load' => 0.32;
 requires 'Moo' => 1.001000;
 requires 'MCE' => 1.408;
@@ -58,6 +60,13 @@ requires 'YAML' => 0.84;
 requires 'YAML::XS' => 0.41;
 requires 'namespace::clean' => 0.24;
 requires 'version' => 0.9902;
+
+if ( $^O eq 'linux' ) {
+  requires 'Sys::Proctitle' => 0;
+}
+
+recommends 'Graph' => 0;
+recommends 'GraphViz' => 0;
 
 install_share 'share';
 

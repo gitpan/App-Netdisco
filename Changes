@@ -1,3 +1,33 @@
+2.029000_001 - 2014-08-08
+
+  [NEW FEATURES]
+
+  * [#108] Port Bounce port control feature (down and up in succession)
+  * Support for stuffing other locations into @INC at runtime
+  * New netdisco-do command "show" for diagnostic reporting
+  * Additional debug levels for netdisco-do to show DBIx::Class and net-snmp
+
+  [ENHANCEMENTS]
+
+  * Reports config is now a list (see ReleaseNotes)
+  * Add "AP" as a hint for WAP support
+  * Attempt to keep PID and logfile as netdisco user even when running as root
+  * Show netdisco-do docs on options error
+  * Do not leak SNMP community string into debug output (unless SHOW_COMMUNITY=1)
+  * Process tree updated to show daemon worker status/activity
+  * Handle management IP of one device being in use on another device
+  * Log at debug the vlan reindexing in macsuck
+
+  [BUG FIXES]
+
+  * Missing action to netdisco-do should not throw Perl error
+  * Sort CDP/LLDP data to be more consistent when multiple neighbors on a port
+  * Fix POD errors in Nbtstat and ResultSet::Device (thanks cpants :)
+  * UTF-8 encoding for Port Name (description)
+  * Allow process grouping to work portably again (daemon config watch)
+  * Only start scheduler when schedule config exists
+  * Update to DataTables 1.10.2 for latest Chrome
+
 2.028013 - 2014-07-31
 
   [ENHANCEMENTS]

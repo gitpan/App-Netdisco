@@ -41,20 +41,34 @@ use Dancer::Plugin::DBIC 'schema';
 info "App::Netdisco version $App::Netdisco::VERSION loaded.";
 
 use Try::Tiny;
+use Pod::Usage;
 use Getopt::Long;
 Getopt::Long::Configure ("bundling");
 
 my ($device, $port, $extra, $debug);
+my ($infotrace, $snmptrace, $sqltrace) = (0, 0, 0);
+
 my $result = GetOptions(
   'device|d=s' => \$device,
   'port|p=s'   => \$port,
   'extra|e=s'  => \$extra,
   'debug|D'    => \$debug,
-) or exit(1);
+  'infotrace|I+' => \$infotrace,
+  'snmptrace|S+' => \$snmptrace,
+  'sqltrace|Q+'  => \$sqltrace,
+) or pod2usage(
+  -msg => 'error: bad options',
+  -verbose => 0,
+  -exitval => 1,
+);
 
 my $CONFIG = config();
 $CONFIG->{logger} = 'console';
 $CONFIG->{log} = ($debug ? 'debug' : 'info');
+
+$ENV{INFO_TRACE} = $infotrace;
+$ENV{SNMP_TRACE} = $snmptrace;
+$ENV{DBIC_TRACE} = $sqltrace; $ENV{DBIC_TRACE_PROFILE} = 'console';
 
 # reconfigure logging to force console output
 Dancer::Logger->init('console', $CONFIG);
@@ -65,15 +79,22 @@ schema('daemon')->deploy;
 # get requested action
 my $action = shift @ARGV;
 
-if (!length $action) {
-  error 'error: missing action!';
-  exit (1);
+unless ($action) {
+    pod2usage(
+      -msg => 'error: missing action!',
+      -verbose => 2,
+      -exitval => 2,
+    );
 }
 
 # create worker (placeholder object for the role methods)
 {
   package MyWorker;
+
   use Moo;
+  use Module::Load ();
+  use Data::Printer ();
+
   with 'App::Netdisco::Daemon::Worker::Poller::Device';
   with 'App::Netdisco::Daemon::Worker::Poller::Arpnip';
   with 'App::Netdisco::Daemon::Worker::Poller::Macsuck';
@@ -82,7 +103,6 @@ if (!length $action) {
   with 'App::Netdisco::Daemon::Worker::Interactive::DeviceActions';
   with 'App::Netdisco::Daemon::Worker::Interactive::PortActions';
 
-  use Module::Load ();
   eval { Module::Load::load 'App::Netdisco::Util::Graph' };
   sub graph {
     App::Netdisco::Util::Graph::graph();
@@ -94,13 +114,32 @@ if (!length $action) {
     App::Netdisco::Util::NodeMonitor::monitor();
     return ('done', 'Generated monitor data.');
   }
+
+  use App::Netdisco::Util::SNMP ();
+  sub show {
+    $extra ||= 'interfaces'; my $class = undef;
+    ($class, $extra) = split(/::([^:]+)$/, $extra);
+    if ($class and $extra) {
+        $class = 'SNMP::Info::'.$class;
+    }
+    else {
+        $extra = $class;
+        undef $class;
+    }
+    my $i = App::Netdisco::Util::SNMP::snmp_connect($device, $class);
+    Data::Printer::p($i->$extra);
+    return ('done', "Showed $extra response from $device.");
+  }
 }
 my $worker = MyWorker->new();
 
 # belt and braces check before we go ahead
 if (not $worker->can( $action )) {
-  error sprintf 'error: %s is not a valid action', $action;
-  exit (1);
+  pod2usage(
+    -msg => (sprintf 'error: %s is not a valid action', $action),
+    -verbose => 2,
+    -exitval => 3,
+  );
 }
 
 # what job are we asked to do?
@@ -132,12 +171,9 @@ exit ($status eq 'done' ? 0 : 1);
 
 netdisco-do - Run any Netdisco job from the command-line.
 
-=head1 USAGE
+=head1 SYNOPSIS
 
- ~/bin/netdisco-do <action> [-D] [-d <device> [-p <port>] [-e <extra>]]
-
-Regardless of Netdisco configuration, debug level logging is enabled if the
-C<-D> flag is given.
+ ~/bin/netdisco-do <action> [-DISQ] [-d <device> [-p <port>] [-e <extra>]]
 
 =head1 DESCRIPTION
 
@@ -169,6 +205,16 @@ Run an nbtstat on the node (specified with C<-d>).
 
 Generate GrapgViz graphs for the largest cluster of devices.
 
+=head2 show
+
+Dump the content of an SNMP MIB leaf, which is useful for diagnostics and
+troubleshooting. You should provide the "C<-e>" option which is the name of
+the leaf (such as C<interfaces> or C<uptime>).
+
+If you wish to test with a device class other than that discovered, prefix the
+leaf with the class short name, for example "C<Layer3::C3550::interfaces>" or
+"C<Layer2::HP::uptime>".
+
 =head2 set_location
 
 Set the SNMP location field on the device (specified with C<-d>). Pass the
@@ -198,5 +244,30 @@ C<-p> parameter (port), and C<-e> parameter (VLAN number).
 
 Set the PoE on/off status on a device port. Requires the C<-d> parameter
 (device), C<-p> parameter (port), and C<-e> parameter ("true" or "false").
+
+=head1 DEBUG LEVELS
+
+The flags "C<-DISQ>" can be specified, multiple times, and enable the
+following items in order:
+
+=over 4
+
+=item C<-D>
+
+Netdisco debug log level
+
+=item C<-I> or C<-II>
+
+L<SNMP::Info> trace level (1 or 2).
+
+=item C<-S> or C<-SS> or C<-SSS>
+
+L<SNMP> (net-snmp) trace level (1, 2 or 3).
+
+=item C<-Q>
+
+L<DBIx::Class> trace enabled.
+
+=back
 
 =cut
