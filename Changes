@@ -1,4 +1,4 @@
-2.029000_001 - 2014-08-08
+2.029000_002 - 2014-08-08
 
   [NEW FEATURES]
 
@@ -17,6 +17,9 @@
   * Process tree updated to show daemon worker status/activity
   * Handle management IP of one device being in use on another device
   * Log at debug the vlan reindexing in macsuck
+  * Add docs note about database backups
+  * Always set DBIC_TRACE_PROFILE=console in environment
+  * Push a row into Device Modules for the chassis even if no module info
 
   [BUG FIXES]
 
@@ -27,6 +30,8 @@
   * Allow process grouping to work portably again (daemon config watch)
   * Only start scheduler when schedule config exists
   * Update to DataTables 1.10.2 for latest Chrome
+  * Clean up duplicate node entries on vlan 0
+  * NBTname search with wildcards fixed
 
 2.028013 - 2014-07-31
 
