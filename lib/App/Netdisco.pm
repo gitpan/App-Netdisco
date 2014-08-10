@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.010_000;
 
-our $VERSION = '2.029000_002';
+our $VERSION = '2.029001';
 use App::Netdisco::Configuration;
 
 use Module::Find ();
@@ -14,7 +14,7 @@ Module::Find::usesub 'App::NetdiscoE::Init';
 
 App::Netdisco - An open source web-based network management tool.
 
-=head1 Introduction
+=head1 DESCRIPTION
 
 Netdisco is a web-based network management tool designed for network
 administrators. Data is collected into a PostgreSQL database using SNMP.

@@ -1,4 +1,4 @@
-2.029000_002 - 2014-08-08
+2.029001 - 2014-08-10
 
   [NEW FEATURES]
 
@@ -6,6 +6,7 @@
   * Support for stuffing other locations into @INC at runtime
   * New netdisco-do command "show" for diagnostic reporting
   * Additional debug levels for netdisco-do to show DBIx::Class and net-snmp
+  * [#107] navbar_autocomplete config item to disable main navbar autocomplete
 
   [ENHANCEMENTS]
 
@@ -32,6 +33,8 @@
   * Update to DataTables 1.10.2 for latest Chrome
   * Clean up duplicate node entries on vlan 0
   * NBTname search with wildcards fixed
+  * Update Sourceforge links in metadata, add DESCRIPTION for CPAN (N. Bowers)
+  * [#131] More correct network space utilization (M. Kosmach)
 
 2.028013 - 2014-07-31
 
