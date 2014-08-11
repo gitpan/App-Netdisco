@@ -35,18 +35,21 @@ if (ref {} eq ref setting('database')) {
 
 }
 
+# static configuration for the in-memory local job queue
+setting('plugins')->{DBIC}->{daemon} = {
+    dsn => 'dbi:SQLite:dbname=:memory:',
+    options => {
+        AutoCommit => 1,
+        RaiseError => 1,
+        sqlite_use_immediate_transaction => 1,
+    },
+    schema_class => 'App::Netdisco::Daemon::DB',
+};
+
 # defaults for workers
 setting('workers')->{queue} ||= 'PostgreSQL';
-if (exists setting('workers')->{interactives}
-    or exists setting('workers')->{pollers}) {
-
-    setting('workers')->{tasks} =
-      (setting('workers')->{pollers} || 0)
-      + (setting('workers')->{interactives} || 0);
-
-    delete setting('workers')->{pollers};
-    delete setting('workers')->{interactives};
-}
+setting('workers')->{interactives} = 1
+  if setting('workers') and not exists setting('workers')->{interactives};
 
 # force skipped DNS resolution, if unset
 setting('dns')->{hosts_file} ||= '/etc/hosts';

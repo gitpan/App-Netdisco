@@ -7,12 +7,12 @@ use App::Netdisco::Daemon::Util ':all';
 use Role::Tiny;
 use namespace::clean;
 
-sub portname {
+sub set_portname {
   my ($self, $job) = @_;
   return _set_port_generic($job, 'alias', 'name');
 }
 
-sub portcontrol {
+sub set_portcontrol {
   my ($self, $job) = @_;
 
   my $port = get_port($job->device, $job->port)
@@ -39,7 +39,7 @@ sub portcontrol {
   }
 }
 
-sub vlan {
+sub set_vlan {
   my ($self, $job) = @_;
 
   my $port = get_port($job->device, $job->port)
@@ -97,7 +97,7 @@ sub _set_port_generic {
   return job_done("Updated [$pn] $slot status on [$ip] to [$data]");
 }
 
-sub power {
+sub set_power {
   my ($self, $job) = @_;
 
   my $port = get_port($job->device, $job->port)

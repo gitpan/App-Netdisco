@@ -7,12 +7,12 @@ use App::Netdisco::Daemon::Util ':all';
 use Role::Tiny;
 use namespace::clean;
 
-sub location {
+sub set_location {
   my ($self, $job) = @_;
   return _set_device_generic($job->device, 'location', $job->subaction);
 }
 
-sub contact {
+sub set_contact {
   my ($self, $job) = @_;
   return _set_device_generic($job->device, 'contact', $job->subaction);
 }
