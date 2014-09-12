@@ -1,3 +1,16 @@
+2.029007 - 2014-09-12
+
+  [ENHANCEMENTS]
+
+  * [#123] Allow devices with no LLDP/CDP to be found as Nodes
+  * Accept host names to netdisco-do show
+  * [#139] Add PaloAlto and IOS-XR support to netdisco-sshcollector
+
+  [BUG FIXES]
+
+  * Skip device aliases which cannot be parsed as IPs
+  * [#137] do not attempt DNS resolution on bad IPs
+
 2.029006 - 2014-08-25
 
   [NEW FEATURES]
