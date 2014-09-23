@@ -1,3 +1,14 @@
+2.029008 - 2014-09-23
+
+  [ENHANCEMENTS]
+
+  * [#144] Setting for items in number of records per table page menu (table_showrecordsmenu).
+
+  [BUG FIXES]
+
+  * Add Dancer import to SSHCollector Platforms
+  * Add note to docs to workaround current Dancer/YAML::XS issue
+
 2.029007 - 2014-09-12
 
   [ENHANCEMENTS]
