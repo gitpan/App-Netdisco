@@ -23,6 +23,7 @@ ajax '/ajax/content/search/node' => require_login sub {
     my ( $start, $end ) = param('daterange') =~ m/(\d+-\d+-\d+)/gmx;
 
     my $mac = NetAddr::MAC->new(mac => $node);
+    undef $mac if (defined $mac and $node =~ m/:{2}[a-f0-9]*$/i); # temp fix
     my @active = (param('archived') ? () : (-bool => 'active'));
 
     my @times = ();
@@ -48,7 +49,7 @@ ajax '/ajax/content/search/node' => require_login sub {
 
     my @where_mac =
       ($using_wildcards ? \['me.mac::text ILIKE ?', $likeval]
-                        : ((!defined $mac or $mac->errstr) ? \'0=1' : ('me.mac' => $mac->as_microsoft)) );
+                        : ((!defined $mac or $mac->errstr) ? \'0=1' : ('me.mac' => $mac->as_ieee)) );
 
     my $sightings = schema('netdisco')->resultset('Node')
       ->search({-and => [@where_mac, @active, @times]}, {

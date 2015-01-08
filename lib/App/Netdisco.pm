@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.010_000;
 
-our $VERSION = '2.029014';
+our $VERSION = '2.030000';
 use App::Netdisco::Configuration;
 
 use Module::Find ();
@@ -73,10 +73,11 @@ On Ubuntu/Debian:
 
 On Fedora/Red-Hat:
 
- root:~# yum install perl-core perl-DBD-Pg net-snmp-perl make automake gcc
+ root:~# yum install perl-core perl-DBD-Pg net-snmp-perl net-snmp-devel make automake gcc
 
-With those installed, next check that your system's clock is correct. Then, we
-can proceed...
+On BSD systems please see L<our BSD tips|App::Netdisco::Manual::BSDInstall>.
+
+With those installed, please check that your system's clock is correct.
 
 Create a user on your system called C<netdisco> if one does not already exist.
 We'll install Netdisco and its dependencies into this user's home area, which
@@ -259,7 +260,7 @@ Oliver Gorwits <oliver@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
  
-This software is copyright (c) 2012, 2013, 2014 by The Netdisco Developer Team.
+This software is copyright (c) 2012, 2013, 2014, 2015 by The Netdisco Developer Team.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
